@@ -39,17 +39,23 @@
     // 1. Initialize Quill
     const quill = new Quill('#editor-container', { theme: 'snow' });
 
-    // 2. Load & decode JD from URL
+    // 2. Load & decode JD from URL (Base64 only, no URI decoding)
     const params = new URLSearchParams(window.location.search);
     const base64JD = params.get('jd');
     if (base64JD) {
-      const html = atob(decodeURIComponent(base64JD));
-      quill.root.innerHTML = html;
+      try {
+        const html = atob(base64JD);
+        quill.root.innerHTML = html;
+        console.log("Decoded JD content:", html); // Optional: debug
+      } catch (err) {
+        quill.root.innerHTML = '<p><em>Invalid JD content.</em></p>';
+        console.error("Error decoding JD:", err);
+      }
     } else {
       quill.root.innerHTML = '<p><em>No JD content provided.</em></p>';
     }
 
-    // 3. Submit handler → POST to your n8n webhook
+    // 3. Submit handler → POST to n8n webhook
     document.getElementById('submit-btn').addEventListener('click', () => {
       const finalHTML = quill.root.innerHTML;
       fetch('https://n8n.sapidblue.in/webhook/f9341fc5-38f8-45fa-b58e-e2d9d49e4754', {
