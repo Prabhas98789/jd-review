@@ -83,6 +83,8 @@
 
     const params = new URLSearchParams(window.location.search);
     const base64JD = params.get('jd');
+    const roleTitle = params.get('role') || 'Untitled Role';
+
     if (base64JD) {
       try {
         const html = atob(base64JD);
@@ -97,20 +99,26 @@
 
     document.getElementById('submit-btn').addEventListener('click', () => {
       const finalHTML = quill.root.innerHTML;
-      fetch('https://n8n.sapidblue.in/webhook/f9341fc5-38f8-45fa-b58e-e2d9d49e4754', {
+      const payload = {
+        finalizedJD: finalHTML,
+        roleTitle,
+        timestamp: new Date().toISOString()
+      };
+
+      fetch('https://n8n.sapidblue.in/webhook/0c4d67a7-ab33-431b-a7b4-8b702d10bfb8', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ finalizedJD: finalHTML })
+        body: JSON.stringify(payload)
       })
       .then(res => {
         if (res.ok) {
-          alert('JD submitted successfully!');
+          alert('✅ JD submitted successfully!');
         } else {
-          alert('Submission failed (status ' + res.status + ')');
+          alert('❌ Submission failed (status ' + res.status + ')');
         }
       })
       .catch(err => {
-        alert('Error submitting: ' + err.message);
+        alert('⚠️ Error submitting: ' + err.message);
       });
     });
   </script>
