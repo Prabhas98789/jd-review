@@ -106,9 +106,11 @@
       quill.root.innerHTML = '<p><em>No JD content provided.</em></p>';
     }
 
-    document.getElementById('jdForm').addEventListener('submit', () => {
+    document.getElementById('jdForm').addEventListener('submit', (event) => {
+      event.preventDefault(); // Prevent default submit
       document.getElementById('finalizedJD').value = quill.root.innerHTML;
       alert('Submitting JD...');
+      event.target.submit();  // Submit form manually after setting the value
     });
   </script>
 
