@@ -83,6 +83,7 @@
   <script>
     const quill = new Quill('#editor-container', { theme: 'snow' });
 
+    // Load base64 JD from URL if provided
     const params = new URLSearchParams(window.location.search);
     const base64JD = params.get('jd');
     if (base64JD) {
@@ -106,18 +107,20 @@
       try {
         const res = await fetch('https://n8n.sapidblue.in/webhook/061865e7-b5d3-4f85-aee8-b2ef4f91d36f', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json'
+          },
           body: JSON.stringify(payload)
         });
 
         if (res.ok) {
           alert('✅ JD submitted successfully!');
         } else {
-          alert('❌ Submission failed. Please try again.');
+          alert('❌ Submission failed. Status: ' + res.status);
         }
       } catch (error) {
         console.error('Submission error:', error);
-        alert('⚠️ Network or server error.');
+        alert('⚠️ Network error: ' + error.message);
       }
     });
   </script>
