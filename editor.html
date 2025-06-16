@@ -78,11 +78,21 @@
 
   <h1>Review & Edit Job Description</h1>
 
-  <form id="jdForm" action="https://n8n.sapidblue.in/form/66418d7b-001a-4188-884f-54cb73a43431" method="POST" target="hidden_iframe">
+  <form id="jdForm"
+        action="https://n8n.sapidblue.in/form/66418d7b-001a-4188-884f-54cb73a43431"
+        method="POST"
+        target="hidden_iframe">
     <div id="editor-wrapper">
       <div id="editor-container"></div>
-      <input type="hidden" name="finalizedJD" id="finalizedJD" />
-      <button type="submit" id="submit-btn">Submit Final JD</button>
+
+      <!-- Changed to <textarea> so very large HTML won't get truncated -->
+      <textarea name="finalizedJD"
+                id="finalizedJD"
+                style="display:none;"></textarea>
+
+      <button type="submit" id="submit-btn">
+        Submit Final JD
+      </button>
     </div>
   </form>
 
@@ -92,26 +102,44 @@
   <script>
     const quill = new Quill('#editor-container', { theme: 'snow' });
 
+    // Load base64 JD if provided
     const params = new URLSearchParams(window.location.search);
     const base64JD = params.get('jd');
     if (base64JD) {
       try {
-        const html = atob(base64JD);
-        quill.root.innerHTML = html;
+        quill.root.innerHTML = atob(base64JD);
       } catch (err) {
         quill.root.innerHTML = '<p><em>Invalid JD content.</em></p>';
-        console.error("Error decoding JD:", err);
+        console.error('Error decoding JD:', err);
       }
     } else {
       quill.root.innerHTML = '<p><em>No JD content provided.</em></p>';
     }
 
-    document.getElementById('jdForm').addEventListener('submit', (event) => {
-      event.preventDefault(); // Prevent default submit
-      document.getElementById('finalizedJD').value = quill.root.innerHTML;
-      alert('Submitting JD...');
-      event.target.submit();  // Submit form manually after setting the value
+    // Listen for form submission
+    document.getElementById('jdForm').addEventListener('submit', event => {
+      event.preventDefault();
+
+      // 1) Grab the HTML from Quill
+      const htmlContent = quill.root.innerHTML;
+
+      // 2) Log it so you can inspect in DevTools
+      console.log('Submitting finalizedJD:', htmlContent);
+
+      // 3) Put it into the hidden textarea
+      document.getElementById('finalizedJD').value = htmlContent;
+
+      // 4) Submit the form into the hidden iframe
+      event.target.submit();
     });
+
+    // Detect when the iframe finishes loading the response
+    document.getElementById('hidden_iframe')
+      .addEventListener('load', () => {
+        console.log('Form submission complete. You can inspect the iframe content if needed:');
+        // e.g.:
+        // console.log(frames['hidden_iframe'].document.body.innerText);
+      });
   </script>
 
 </body>
