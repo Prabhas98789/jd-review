@@ -90,7 +90,8 @@
                 id="finalizedJD"
                 style="display:none;"></textarea>
 
-      <button type="submit" id="submit-btn">
+      <!-- change to button type=button -->
+      <button type="button" id="submit-btn">
         Submit Final JD
       </button>
     </div>
@@ -116,12 +117,15 @@
       quill.root.innerHTML = '<p><em>No JD content provided.</em></p>';
     }
 
-    // On form submit, populate the hidden textarea
     const form = document.getElementById('jdForm');
     const hiddenField = document.getElementById('finalizedJD');
-    form.addEventListener('submit', () => {
+    const submitBtn = document.getElementById('submit-btn');
+
+    // On button click, populate and submit
+    submitBtn.addEventListener('click', () => {
       hiddenField.value = quill.root.innerHTML;
       console.log('finalizedJD set to:', hiddenField.value);
+      form.submit();
     });
 
     // Detect when the iframe finishes loading the response
