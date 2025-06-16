@@ -85,7 +85,7 @@
     <div id="editor-wrapper">
       <div id="editor-container"></div>
 
-      <!-- Changed to <textarea> so very large HTML won't get truncated -->
+      <!-- Hidden textarea for large content -->
       <textarea name="finalizedJD"
                 id="finalizedJD"
                 style="display:none;"></textarea>
@@ -116,28 +116,18 @@
       quill.root.innerHTML = '<p><em>No JD content provided.</em></p>';
     }
 
-    // Listen for form submission
-    document.getElementById('jdForm').addEventListener('submit', event => {
-      event.preventDefault();
-
-      // 1) Grab the HTML from Quill
-      const htmlContent = quill.root.innerHTML;
-
-      // 2) Log it so you can inspect in DevTools
-      console.log('Submitting finalizedJD:', htmlContent);
-
-      // 3) Put it into the hidden textarea
-      document.getElementById('finalizedJD').value = htmlContent;
-
-      // 4) Submit the form into the hidden iframe
-      event.target.submit();
+    // Populate the hidden field on button click
+    const hiddenField = document.getElementById('finalizedJD');
+    document.getElementById('submit-btn').addEventListener('click', () => {
+      hiddenField.value = quill.root.innerHTML;
+      console.log('(finalizedJD) set to:', hiddenField.value);
     });
 
     // Detect when the iframe finishes loading the response
     document.getElementById('hidden_iframe')
       .addEventListener('load', () => {
-        console.log('Form submission complete. You can inspect the iframe content if needed:');
-        // e.g.:
+        console.log('Form submission complete.');
+        // To inspect response, uncomment:
         // console.log(frames['hidden_iframe'].document.body.innerText);
       });
   </script>
