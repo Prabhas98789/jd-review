@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>JD Format Previews</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f5f7fa;
+      padding: 20px;
+      margin: 0;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .tabs {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+    .tab {
+      padding: 10px 20px;
+      margin: 0 5px;
+      background: #e0e0e0;
+      cursor: pointer;
+      border-radius: 6px;
+      transition: 0.3s;
+    }
+    .tab.active {
+      background: #4CAF50;
+      color: white;
+    }
+    .content {
+      display: none;
+      max-width: 800px;
+      margin: auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+      white-space: pre-wrap;
+    }
+    .content.active {
+      display: block;
+    }
+    img {
+      max-width: 100%;
+      margin-top: 10px;
+      border-radius: 8px;
+    }
+    .copy-btn {
+      margin-top: 10px;
+      padding: 6px 12px;
+      background: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Channel-Specific JD Formats</h1>
+
+<div class="tabs">
+  <div class="tab active" data-tab="whatsapp">WhatsApp</div>
+  <div class="tab" data-tab="linkedin">LinkedIn</div>
+  <div class="tab" data-tab="telegram">Telegram</div>
+</div>
+
+<div id="whatsapp" class="content active">
+  <h3>WhatsApp Message</h3>
+  <p id="whatsapp-text"></p>
+  <button class="copy-btn" onclick="copyToClipboard('whatsapp-text')">Copy</button>
+  <img src="assets/jd-image.jpg" alt="JD image">
+</div>
+
+<div id="linkedin" class="content">
+  <h3>LinkedIn Post</h3>
+  <p id="linkedin-text"></p>
+  <button class="copy-btn" onclick="copyToClipboard('linkedin-text')">Copy</button>
+  <img src="assets/jd-image.jpg" alt="JD image">
+</div>
+
+<div id="telegram" class="content">
+  <h3>Telegram Message</h3>
+  <p id="telegram-text"></p>
+  <button class="copy-btn" onclick="copyToClipboard('telegram-text')">Copy</button>
+  <img src="assets/jd-image.jpg" alt="JD image">
+</div>
+
+<script>
+  // Basic tab logic
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.tab, .content').forEach(el => el.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById(tab.dataset.tab).classList.add('active');
+    });
+  });
+
+  function copyToClipboard(id) {
+    const text = document.getElementById(id).innerText;
+    navigator.clipboard.writeText(text).then(() => {
+      alert("Copied!");
+    });
+  }
+
+  // Read data from URL
+  const params = new URLSearchParams(window.location.search);
+  const encoded = params.get("data");
+  if (encoded) {
+    const decoded = JSON.parse(atob(encoded));
+    document.getElementById("whatsapp-text").innerText = decoded.whatsapp;
+    document.getElementById("linkedin-text").innerText = decoded.linkedin;
+    document.getElementById("telegram-text").innerText = decoded.telegram;
+  } else {
+    document.querySelectorAll('p').forEach(p => p.innerText = 'No data found.');
+  }
+</script>
+
+</body>
+</html>
