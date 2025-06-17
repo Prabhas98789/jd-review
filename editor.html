@@ -147,7 +147,6 @@
     quill.on('text-change', updateCharCount);
     updateCharCount();
 
-    // Load base64 JD
     const params = new URLSearchParams(window.location.search);
     const base64JD = params.get('jd');
     if (base64JD) {
@@ -171,20 +170,45 @@
       button.textContent = 'Submitting...';
 
       try {
-        const res = await fetch('https://n8n.sapidblue.in/webhook/061865e7-b5d3-4f85-aee8-b2ef4f91d36f', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
+        const [whatsRes, linkedRes, teleRes] = await Promise.all([
+          fetch('https://n8n.sapidblue.in/webhook/whatsapp', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          }),
+          fetch('https://n8n.sapidblue.in/webhook/linkedin', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          }),
+          fetch('https://n8n.sapidblue.in/webhook/telegram', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          }),
+        ]);
 
-        if (res.ok) {
-          showToast('✅ JD submitted successfully!');
+        if (whatsRes.ok && linkedRes.ok && teleRes.ok) {
+          const [whatsapp, linkedin, telegram] = await Promise.all([
+            whatsRes.json(),
+            linkedRes.json(),
+            teleRes.json(),
+          ]);
+
+          const formatted = {
+            whatsapp: whatsapp.message || 'No WhatsApp content',
+            linkedin: linkedin.message || 'No LinkedIn content',
+            telegram: telegram.message || 'No Telegram content',
+          };
+
+          const encoded = btoa(JSON.stringify(formatted));
+          window.location.href = `result.html?data=${encoded}`;
         } else {
-          showToast(`❌ Submission failed. Status: ${res.status}`, false);
+          showToast('❌ One or more submissions failed', false);
         }
       } catch (error) {
-        showToast(`⚠️ Network error: ${error.message}`, false);
-        console.error('Submission error:', error);
+        showToast(`⚠️ Error: ${error.message}`, false);
+        console.error('Error submitting JD:', error);
       } finally {
         button.disabled = false;
         button.textContent = 'Submit Final JD';
