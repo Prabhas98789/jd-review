@@ -13,15 +13,17 @@
     h1 {
       text-align: center;
       margin-bottom: 20px;
+      color: #333;
     }
     .tabs {
       display: flex;
       justify-content: center;
+      flex-wrap: wrap;
       margin-bottom: 20px;
     }
     .tab {
       padding: 10px 20px;
-      margin: 0 5px;
+      margin: 5px;
       background: #e0e0e0;
       cursor: pointer;
       border-radius: 6px;
@@ -58,6 +60,15 @@
       border-radius: 6px;
       cursor: pointer;
     }
+    .copied {
+      margin-left: 10px;
+      color: #4CAF50;
+      font-size: 0.9em;
+      display: none;
+    }
+    .copied.show {
+      display: inline;
+    }
   </style>
 </head>
 <body>
@@ -73,26 +84,29 @@
 <div id="whatsapp" class="content active">
   <h3>WhatsApp Message</h3>
   <p id="whatsapp-text"></p>
-  <button class="copy-btn" onclick="copyToClipboard('whatsapp-text')">Copy</button>
+  <button class="copy-btn" onclick="copyToClipboard('whatsapp-text', this)">Copy</button>
+  <span class="copied">Copied!</span>
   <img src="assets/jd-image.jpg" alt="JD image">
 </div>
 
 <div id="linkedin" class="content">
   <h3>LinkedIn Post</h3>
   <p id="linkedin-text"></p>
-  <button class="copy-btn" onclick="copyToClipboard('linkedin-text')">Copy</button>
+  <button class="copy-btn" onclick="copyToClipboard('linkedin-text', this)">Copy</button>
+  <span class="copied">Copied!</span>
   <img src="assets/jd-image.jpg" alt="JD image">
 </div>
 
 <div id="telegram" class="content">
   <h3>Telegram Message</h3>
   <p id="telegram-text"></p>
-  <button class="copy-btn" onclick="copyToClipboard('telegram-text')">Copy</button>
+  <button class="copy-btn" onclick="copyToClipboard('telegram-text', this)">Copy</button>
+  <span class="copied">Copied!</span>
   <img src="assets/jd-image.jpg" alt="JD image">
 </div>
 
 <script>
-  // Basic tab logic
+  // Tabs logic
   document.querySelectorAll('.tab').forEach(tab => {
     tab.addEventListener('click', () => {
       document.querySelectorAll('.tab, .content').forEach(el => el.classList.remove('active'));
@@ -101,23 +115,26 @@
     });
   });
 
-  function copyToClipboard(id) {
+  // Copy to clipboard
+  function copyToClipboard(id, btn) {
     const text = document.getElementById(id).innerText;
     navigator.clipboard.writeText(text).then(() => {
-      alert("Copied!");
+      const copied = btn.nextElementSibling;
+      copied.classList.add('show');
+      setTimeout(() => copied.classList.remove('show'), 1500);
     });
   }
 
-  // Read data from URL
+  // Load content
   const params = new URLSearchParams(window.location.search);
   const encoded = params.get("data");
-  if (encoded) {
-    const decoded = JSON.parse(atob(encoded));
-    document.getElementById("whatsapp-text").innerText = decoded.whatsapp;
-    document.getElementById("linkedin-text").innerText = decoded.linkedin;
-    document.getElementById("telegram-text").innerText = decoded.telegram;
-  } else {
-    document.querySelectorAll('p').forEach(p => p.innerText = 'No data found.');
+  try {
+    const decoded = JSON.parse(atob(encoded || '')) || {};
+    document.getElementById("whatsapp-text").innerText = decoded.whatsapp || "No WhatsApp data.";
+    document.getElementById("linkedin-text").innerText = decoded.linkedin || "No LinkedIn data.";
+    document.getElementById("telegram-text").innerText = decoded.telegram || "No Telegram data.";
+  } catch {
+    document.querySelectorAll('p').forEach(p => p.innerText = '⚠️ Failed to load data.');
   }
 </script>
 
