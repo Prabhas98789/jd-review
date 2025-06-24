@@ -18,7 +18,10 @@
         </svg>
       </button>
     </h1>
-    <button @click="addUser" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">+ Add New</button>
+    <div class="flex gap-2">
+      <button @click="addUser" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">+ Add New</button>
+      <button @click="saveAll" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">💾 Save All</button>
+    </div>
   </div>
 
   <div class="overflow-x-auto">
@@ -35,7 +38,6 @@
           <th class="p-2">Section Token</th>
           <th class="p-2">Geography</th>
           <th class="p-2">Scheduled Time</th>
-          <th class="p-2">Action</th>
         </tr>
       </thead>
       <tbody>
@@ -51,9 +53,6 @@
             <td class="p-2"><input type="text" x-model="user.section_token" class="w-full border rounded px-1" /></td>
             <td class="p-2"><input type="text" x-model="user.geography" class="w-full border rounded px-1" /></td>
             <td class="p-2"><input type="time" x-model="user.scheduled_time" class="w-full border rounded px-1" /></td>
-            <td class="p-2 text-center">
-              <button @click="save(user)" class="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600">Save</button>
-            </td>
           </tr>
         </template>
       </tbody>
@@ -68,23 +67,38 @@ function dashboard() {
       try {
         const res = await fetch("https://n8n.sapidblue.in/webhook/66e1af8f-9c6d-4c2c-844a-889c34506b1c");
         if (res.ok) {
-          const data = await res.json();
-          this.users = data.map(u => ({
-            first_name: u.first_name || "",
-            last_name: u.last_name || "",
-            account_id: u.account_id || "",
-            industry: u.industry || "",
-            indus_id: u.indus_id || "",
-            q: u.q || "",
-            topic_token: u.topic_token || "",
-            section_token: u.section_token || "",
-            geography: u.geography || "",
-            scheduled_time: (u.scheduled_time || "").slice(0, 5), // convert '15:00:00' → '15:00'
-            id: u.id || null,
-            name: u.name || "",
-            unipile_user_id: u.unipile_user_id || "",
-            active: u.active ?? 1
-          }));
+          const raw = await res.json();
+          this.users = raw.map(u => {
+            const nameParts = (u.name || "").trim().split(" ");
+            const firstName = u.first_name || nameParts[0] || "";
+            const lastName = u.last_name || nameParts.slice(1).join(" ") || "";
+
+            const industryMap = {
+              FINTECH: "456",
+              IGAMING: "789",
+              HEALTHCARE: "321"
+            };
+
+            let topicToken = u.topic_token || "";
+            if (!topicToken && u.q) {
+              const q = u.q.toLowerCase();
+              topicToken = q.includes("ai") ? "CAAQ_AI_TOKEN"
+                          : q.includes("fintech") ? "CAAQ_FINTECH_TOKEN"
+                          : "CAAQ_GENERIC_TOKEN";
+            }
+
+            const scheduledTime = (u.scheduled_time || "").slice(0,5);
+
+            return {
+              ...u,
+              first_name: firstName,
+              last_name: lastName,
+              indus_id: u.indus_id || industryMap[u.industry?.toUpperCase()] || "",
+              topic_token: topicToken,
+              geography: u.geography || (u.name?.toLowerCase().includes("australia") ? "AUSTRALIA" : ""),
+              scheduled_time: scheduledTime
+            };
+          });
         } else {
           alert("Failed to fetch data");
         }
@@ -106,24 +120,24 @@ function dashboard() {
         scheduled_time: ""
       });
     },
-    async save(user) {
-      const webhookUrl = "https://n8n.sapidblue.in/webhook/save-profile-config"; // Replace with your POST webhook
+    async saveAll() {
+      const webhookUrl = "https://n8n.sapidblue.in/webhook/66e1af8f-9c6d-4c2c-844a-889c34506b1c";
       try {
         const res = await fetch(webhookUrl, {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
           },
-          body: JSON.stringify(user)
+          body: JSON.stringify(this.users)
         });
         if (res.ok) {
-          alert(`Saved ${user.first_name || ""} ${user.last_name || ""}`);
+          alert("All profiles saved successfully.");
         } else {
           alert("Failed to save. Check webhook.");
         }
       } catch (err) {
         console.error(err);
-        alert("Error calling save webhook");
+        alert("Error calling webhook");
       }
     }
   }
