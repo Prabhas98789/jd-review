@@ -86,8 +86,10 @@ function dashboard() {
       try {
         const res = await fetch(FETCH_URL);
         if (!res.ok) throw new Error(`Status ${res.status}`);
-        const raw = await res.json();
-        this.users = raw.map(u => {
+        const data = await res.json();
+        // Ensure array
+        const list = Array.isArray(data) ? data : [data];
+        this.users = list.map(u => {
           const parts = (u.name||'').trim().split(' ');
           return {
             first_name: u.first_name ?? parts[0] ?? '',
@@ -117,10 +119,7 @@ function dashboard() {
     async saveAll() {
       this.saving = true;
       try {
-        const res = await fetch(SAVE_URL,{
-          method:'POST',headers:{'Content-Type':'application/json'},
-          body:JSON.stringify(this.users)
-        });
+        const res = await fetch(SAVE_URL,{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(this.users) });
         if (!res.ok) throw new Error(res.statusText);
         alert('✅ Saved successfully.');
       } catch (err) {
