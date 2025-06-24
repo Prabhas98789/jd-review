@@ -2,91 +2,113 @@
 <html lang="en" class="bg-gray-100">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>User Profile</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LinkedIn Profile</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
-<body class="font-sans" x-data="profilePage()" x-init="init()">
-  <div class="min-h-screen flex">
-    <!-- Sidebar -->
-    <div class="w-64 bg-white shadow p-6">
-      <h2 class="text-xl font-bold mb-4">Navigation</h2>
-      <ul class="space-y-2 text-sm text-gray-700">
-        <li><a href="#" class="hover:text-blue-600">🔗 Connections</a></li>
-        <li><a href="#" class="hover:text-blue-600">📨 Invitations</a></li>
-        <li><a href="#" class="hover:text-blue-600">📋 Logs</a></li>
-      </ul>
-    </div>
+<body x-data="profilePage()" x-init="init()" class="min-h-screen flex bg-gray-100">
+  <!-- Sidebar -->
+  <aside class="w-64 bg-white shadow-lg p-6">
+    <h2 class="text-lg font-bold mb-4">Navigation</h2>
+    <ul class="space-y-3 text-blue-700">
+      <li><a href="#" class="hover:underline">Connections</a></li>
+      <li><a href="#" class="hover:underline">Invitations Sent</a></li>
+      <li><a href="#" class="hover:underline">Activity Logs</a></li>
+    </ul>
+  </aside>
 
-    <!-- Main Content -->
-    <div class="flex-1 p-8 bg-gray-50">
-      <template x-if="loading">
-        <div class="text-blue-600">⏳ Loading profile...</div>
-      </template>
+  <!-- Main Content -->
+  <main class="flex-1 p-6">
+    <template x-if="loading">
+      <div class="text-blue-600 text-lg">Loading profile...</div>
+    </template>
 
-      <template x-if="!loading && profile">
-        <div class="max-w-4xl mx-auto bg-white shadow rounded-lg p-6">
-          <div class="flex gap-6 items-center">
-            <img :src="profile.profile_picture_url" alt="Profile" class="w-24 h-24 rounded-full border" />
-            <div>
-              <h1 class="text-2xl font-bold" x-text="profile.first_name + ' ' + profile.last_name"></h1>
-              <p class="text-gray-600" x-text="profile.occupation"></p>
-              <p class="text-sm text-gray-500" x-text="profile.location"></p>
-              <a class="text-blue-600 hover:underline" :href="'https://linkedin.com/in/' + profile.public_identifier" target="_blank">View LinkedIn</a>
-            </div>
-          </div>
+    <template x-if="!loading && profile">
+      <div class="max-w-4xl">
+        <div class="flex items-center space-x-6 bg-white p-6 rounded shadow">
+          <img :src="profile.profile_picture_url" class="w-24 h-24 rounded-full object-cover border" alt="Profile Picture">
+          <div>
+            <h1 class="text-2xl font-bold" x-text="profile.first_name + ' ' + profile.last_name"></h1>
+            <p class="text-gray-600" x-text="profile.occupation"></p>
+            <p class="text-gray-500 text-sm" x-text="profile.location"></p>
+            <p class="text-sm mt-1">Email: <span x-text="profile.email"></span></p>
+            <a :href="'https://linkedin.com/in/' + profile.public_identifier" target="_blank" class="text-blue-600 hover:underline text-sm">View LinkedIn</a>
 
-          <div class="mt-6">
-            <h2 class="text-lg font-semibold mb-2">Contact Info</h2>
-            <p><strong>Email:</strong> <span x-text="profile.email"></span></p>
-          </div>
-
-          <div class="mt-6">
-            <h2 class="text-lg font-semibold mb-2">Organizations</h2>
-            <ul class="list-disc ml-6 text-gray-700">
-              <template x-for="org in organizations" :key="org.organization_id">
-                <li x-text="org.organization_name"></li>
-              </template>
-            </ul>
+            <button @click="reloadProfile" class="mt-4 px-4 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700">
+              🔄 Reload Profile
+            </button>
           </div>
         </div>
-      </template>
-    </div>
-  </div>
 
-<script>
-function profilePage() {
-  return {
-    loading: true,
-    profile: null,
-    organizations: [],
+        <div class="mt-6 bg-white p-4 rounded shadow">
+          <h2 class="text-xl font-semibold mb-3">Organizations</h2>
+          <ul class="list-disc list-inside text-gray-700" x-show="organizations.length">
+            <template x-for="org in organizations" :key="org.organization_id">
+              <li x-text="org.organization_name"></li>
+            </template>
+          </ul>
+        </div>
+      </div>
+    </template>
+  </main>
 
-    async init() {
-      const params = new URLSearchParams(window.location.search);
-      const uid = params.get('uid');
-      if (!uid) return alert('No UID provided.');
+  <script>
+    function profilePage() {
+      return {
+        profile: null,
+        organizations: [],
+        loading: false,
 
-      try {
-        const [profileRes, orgRes] = await Promise.all([
-          fetch(`/api/profile?uid=${uid}`),
-          fetch(`/api/organizations?uid=${uid}`)
-        ]);
+        async init() {
+          const params = new URLSearchParams(window.location.search);
+          const provider_id = params.get('uid');
+          if (!provider_id) return alert('Missing provider ID');
+          await this.fetchProfile(provider_id);
+        },
 
-        const profileJson = await profileRes.json();
-        const orgJson = await orgRes.json();
+        async fetchProfile(provider_id) {
+          this.loading = true;
+          try {
+            const res = await fetch("https://n8n.sapidblue.in/webhook/de46a431-75ad-4ec1-8056-0254b273f779", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ provider_id })
+            });
+            const data = await res.json();
+            this.profile = data.profile;
+            this.organizations = data.organizations;
+          } catch (err) {
+            alert("Error loading profile");
+            console.error(err);
+          } finally {
+            this.loading = false;
+          }
+        },
 
-        this.profile = profileJson;
-        this.organizations = orgJson;
-      } catch (err) {
-        alert("Failed to load profile data");
-        console.error(err);
-      } finally {
-        this.loading = false;
+        async reloadProfile() {
+          const provider_id = this.profile?.provider_id;
+          if (!provider_id) return;
+
+          this.loading = true;
+          try {
+            const res = await fetch("https://n8n.sapidblue.in/webhook/5cb8ca06-4b94-4448-a9f3-2045a418cd8c", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ provider_id })
+            });
+            const data = await res.json();
+            this.profile = data.profile;
+            this.organizations = data.organizations;
+          } catch (err) {
+            alert("Error refreshing profile");
+            console.error(err);
+          } finally {
+            this.loading = false;
+          }
+        }
       }
     }
-  };
-}
-</script>
+  </script>
 </body>
 </html>
