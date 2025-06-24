@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en" class="bg-gray-50">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>LinkedIn Config Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+</head>
+<body class="p-6" x-cloak x-data="dashboard()" x-init="fetchData()">
+  <div class="flex justify-between items-center mb-4">
+    <h1 class="text-2xl font-bold flex items-center gap-3">
+      Profile Configuration
+      <button @click="fetchData()" :disabled="loading" title="Reload data" class="text-blue-600 hover:text-blue-800 disabled:opacity-50">
+        <!-- reload icon -->
+      </button>
+    </h1>
+    <div class="flex gap-2">
+      <button @click="addUser()" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">+ Add New</button>
+      <button @click="saveAll()" :disabled="saving" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 disabled:opacity-50">
+        <template x-if="!saving">💾 Save All</template>
+        <template x-if="saving">⏳ Saving...</template>
+      </button>
+    </div>
+  </div>
+
+  <template x-if="loading">
+    <div class="text-blue-600 mb-3 flex items-center gap-2">
+      <!-- spinner --> Waiting for server response...
+    </div>
+  </template>
+
+  <div class="overflow-x-auto" x-show="!loading">
+    <p x-text="`Loaded ${users.length} profiles`" class="mb-2 text-gray-600"></p>
+    <table class="min-w-full bg-white shadow-md rounded-xl text-sm">
+      <thead class="bg-gray-100 text-gray-700">
+        <tr>
+          <template x-for="header in headers" :key="header">
+            <th class="p-2" x-text="header"></th>
+          </template>
+        </tr>
+      </thead>
+      <tbody>
+        <template x-for="(user,index) in users" :key="index">
+          <tr class="border-t">
+            <td class="p-2">
+              <input type="text" x-model="user.first_name" class="w-full border rounded px-1" />
+            </td>
+            <td class="p-2">
+              <input type="text" x-model="user.last_name" class="w-full border rounded px-1" />
+            </td>
+            <td class="p-2">
+              <input type="text" x-model="user.account_id" class="w-full border rounded px-1" />
+            </td>
+            <td class="p-2">
+              <select x-model="user.industry" class="w-full border rounded px-1">
+                <option value="" disabled>Select Industry</option>
+                <template x-for="opt in industryOptions" :key="opt">
+                  <option x-text="opt" :value="opt"></option>
+                </template>
+              </select>
+            </td>
+            <td class="p-2">
+              <input type="text" x-model="user.indus_id" readonly class="w-full border rounded px-1 bg-gray-100" />
+            </td>
+            <td class="p-2"><input type="text" x-model="user.q" class="w-full border rounded px-1" /></td>
+            <td class="p-2"><input type="text" x-model="user.topic_token" class="w-full border rounded px-1" /></td>
+            <td class="p-2"><input type="text" x-model="user.section_token" class="w-full border rounded px-1" /></td>
+            <td class="p-2"><input type="text" x-model="user.geography" class="w-full border rounded px-1" /></td>
+            <td class="p-2"><input type="time" x-model="user.scheduled_time" class="w-full border rounded px-1" /></td>
+          </tr>
+        </template>
+      </tbody>
+    </table>
+  </div>
+
+<script>
+function dashboard() {
+  const FETCH_URL = 'https://n8n.sapidblue.in/webhook/66e1af8f-9c6d-4c2c-844a-889c34506b1c';
+  const SAVE_URL = 'https://n8n.sapidblue.in/webhook/66e1af8f-9c6d-4c2c-844a-889c34506b1c1';
+
+  const industryOptions = ['AI','FINTECH','IGAMING','CYBERSECURITY'];
+  const industryMap = { 'AI':123, 'FINTECH':456, 'IGAMING':789, 'CYBERSECURITY':3130 };
+
+  return {
+    users: [],
+    headers: ['First Name','Last Name','Account ID','Industry','Indus ID','q','Topic Token','Section Token','Geography','Scheduled Time'],
+    loading: true,
+    saving: false,
+    industryOptions,
+
+    async fetchData() {
+      this.loading = true;
+      try {
+        const res = await fetch(FETCH_URL);
+        const data = await res.json();
+        const list = Array.isArray(data) ? data : [data];
+        this.users = list.map(u=>({
+          first_name:u.first_name||'', last_name:u.last_name||'', account_id:u.account_id||'',
+          industry:u.industry||'', indus_id:u.indus_id||'', q:u.q||'',
+          topic_token:u.topic_token||'', section_token:u.section_token||'', geography:u.geography||'',
+          scheduled_time:(u.scheduled_time||'').slice(0,5)
+        }));
+      } catch(e){ console.error(e); alert('Fetch failed'); }
+      finally{ this.loading = false; }
+    },
+
+    addUser() {
+      this.users.push({ first_name:'', last_name:'', account_id:'', industry:'', indus_id:'', q:'', topic_token:'', section_token:'', geography:'', scheduled_time:'' });
+    },
+
+    async saveAll() {
+      this.saving = true;
+      // populate indus_id from selected industry
+      this.users.forEach(u=> u.indus_id = industryMap[u.industry]||'');
+      try {
+        const res = await fetch(SAVE_URL, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(this.users) });
+        if(res.ok) alert('✅ Saved'); else throw 0;
+      } catch(e){ console.error(e); alert('Save failed'); }
+      finally{ this.saving = false; }
+    }
+  }
+}
+</script>
+</body>
+</html>
