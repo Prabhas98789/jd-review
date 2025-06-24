@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en" class="bg-gray-100">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>User Profile</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+</head>
+<body class="font-sans" x-data="profilePage()" x-init="init()">
+  <div class="min-h-screen flex">
+    <!-- Sidebar -->
+    <div class="w-64 bg-white shadow p-6">
+      <h2 class="text-xl font-bold mb-4">Navigation</h2>
+      <ul class="space-y-2 text-sm text-gray-700">
+        <li><a href="#" class="hover:text-blue-600">🔗 Connections</a></li>
+        <li><a href="#" class="hover:text-blue-600">📨 Invitations</a></li>
+        <li><a href="#" class="hover:text-blue-600">📋 Logs</a></li>
+      </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="flex-1 p-8 bg-gray-50">
+      <template x-if="loading">
+        <div class="text-blue-600">⏳ Loading profile...</div>
+      </template>
+
+      <template x-if="!loading && profile">
+        <div class="max-w-4xl mx-auto bg-white shadow rounded-lg p-6">
+          <div class="flex gap-6 items-center">
+            <img :src="profile.profile_picture_url" alt="Profile" class="w-24 h-24 rounded-full border" />
+            <div>
+              <h1 class="text-2xl font-bold" x-text="profile.first_name + ' ' + profile.last_name"></h1>
+              <p class="text-gray-600" x-text="profile.occupation"></p>
+              <p class="text-sm text-gray-500" x-text="profile.location"></p>
+              <a class="text-blue-600 hover:underline" :href="'https://linkedin.com/in/' + profile.public_identifier" target="_blank">View LinkedIn</a>
+            </div>
+          </div>
+
+          <div class="mt-6">
+            <h2 class="text-lg font-semibold mb-2">Contact Info</h2>
+            <p><strong>Email:</strong> <span x-text="profile.email"></span></p>
+          </div>
+
+          <div class="mt-6">
+            <h2 class="text-lg font-semibold mb-2">Organizations</h2>
+            <ul class="list-disc ml-6 text-gray-700">
+              <template x-for="org in organizations" :key="org.organization_id">
+                <li x-text="org.organization_name"></li>
+              </template>
+            </ul>
+          </div>
+        </div>
+      </template>
+    </div>
+  </div>
+
+<script>
+function profilePage() {
+  return {
+    loading: true,
+    profile: null,
+    organizations: [],
+
+    async init() {
+      const params = new URLSearchParams(window.location.search);
+      const uid = params.get('uid');
+      if (!uid) return alert('No UID provided.');
+
+      try {
+        const [profileRes, orgRes] = await Promise.all([
+          fetch(`/api/profile?uid=${uid}`),
+          fetch(`/api/organizations?uid=${uid}`)
+        ]);
+
+        const profileJson = await profileRes.json();
+        const orgJson = await orgRes.json();
+
+        this.profile = profileJson;
+        this.organizations = orgJson;
+      } catch (err) {
+        alert("Failed to load profile data");
+        console.error(err);
+      } finally {
+        this.loading = false;
+      }
+    }
+  };
+}
+</script>
+</body>
+</html>
