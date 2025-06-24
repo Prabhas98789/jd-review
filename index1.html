@@ -3,49 +3,48 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Unipile LinkedIn Profile Config</title>
+  <title>LinkedIn Config Dashboard</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
-<body class="p-6" x-data="dashboard()">
-  <h1 class="text-2xl font-bold mb-6">LinkedIn Profile Configuration</h1>
+<body class="p-6" x-data="dashboard()" x-init="fetchData()">
+  <div class="flex justify-between items-center mb-4">
+    <h1 class="text-2xl font-bold">Profile Configuration</h1>
+    <button @click="addUser" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">+ Add New</button>
+  </div>
 
   <div class="overflow-x-auto">
     <table class="min-w-full bg-white shadow-md rounded-xl text-sm">
       <thead class="bg-gray-100 text-gray-700">
         <tr>
-          <th class="p-3 text-left">Name</th>
-          <th class="p-3">Schedule Time</th>
-          <th class="p-3">Keywords</th>
-          <th class="p-3">Location</th>
-          <th class="p-3">Connect?</th>
-          <th class="p-3">Comment?</th>
-          <th class="p-3">Action</th>
+          <th class="p-2">First Name</th>
+          <th class="p-2">Last Name</th>
+          <th class="p-2">Account ID</th>
+          <th class="p-2">Industry</th>
+          <th class="p-2">Indus ID</th>
+          <th class="p-2">q</th>
+          <th class="p-2">Topic Token</th>
+          <th class="p-2">Section Token</th>
+          <th class="p-2">Geography</th>
+          <th class="p-2">Scheduled Time</th>
+          <th class="p-2">Action</th>
         </tr>
       </thead>
       <tbody>
-        <template x-for="user in users" :key="user.account_id">
+        <template x-for="(user, index) in users" :key="index">
           <tr class="border-t">
-            <td class="p-3 font-semibold" x-text="user.name"></td>
-            <td class="p-3">
-              <input type="time" class="border rounded px-2 py-1" x-model="user.scheduled_time">
-            </td>
-            <td class="p-3">
-              <input type="text" class="border rounded px-2 py-1" x-model="user.search_keywords">
-            </td>
-            <td class="p-3">
-              <input type="text" class="border rounded px-2 py-1" x-model="user.search_location">
-            </td>
-            <td class="p-3 text-center">
-              <input type="checkbox" x-model="user.send_connection" class="w-4 h-4">
-            </td>
-            <td class="p-3 text-center">
-              <input type="checkbox" x-model="user.send_comment" class="w-4 h-4">
-            </td>
-            <td class="p-3 text-center">
-              <button @click="save(user)" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded">
-                Save
-              </button>
+            <td class="p-2"><input type="text" x-model="user.first_name" class="w-full border rounded px-1" /></td>
+            <td class="p-2"><input type="text" x-model="user.last_name" class="w-full border rounded px-1" /></td>
+            <td class="p-2"><input type="text" x-model="user.account_id" class="w-full border rounded px-1" /></td>
+            <td class="p-2"><input type="text" x-model="user.industry" class="w-full border rounded px-1" /></td>
+            <td class="p-2"><input type="text" x-model="user.indus_id" class="w-full border rounded px-1" /></td>
+            <td class="p-2"><input type="text" x-model="user.q" class="w-full border rounded px-1" /></td>
+            <td class="p-2"><input type="text" x-model="user.topic_token" class="w-full border rounded px-1" /></td>
+            <td class="p-2"><input type="text" x-model="user.section_token" class="w-full border rounded px-1" /></td>
+            <td class="p-2"><input type="text" x-model="user.geography" class="w-full border rounded px-1" /></td>
+            <td class="p-2"><input type="time" x-model="user.scheduled_time" class="w-full border rounded px-1" /></td>
+            <td class="p-2 text-center">
+              <button @click="save(user)" class="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600">Save</button>
             </td>
           </tr>
         </template>
@@ -57,32 +56,36 @@
 <script>
 function dashboard() {
   return {
-    users: [
-      {
-        account_id: "BLW1bjLLTTejb8A6CukWnQ",
-        name: "Prabhas Bhargav",
-        scheduled_time: "15:00",
-        search_keywords: "HR",
-        search_location: "Delhi",
-        send_connection: true,
-        send_comment: false
-      },
-      {
-        account_id: "XYZ0987LKJH",
-        name: "Ravi Mehra",
-        scheduled_time: "16:00",
-        search_keywords: "Recruiter",
-        search_location: "Bangalore",
-        send_connection: false,
-        send_comment: false
+    users: [],
+    async fetchData() {
+      try {
+        const res = await fetch("https://n8n.sapidblue.in/webhook/66e1af8f-9c6d-4c2c-844a-889c34506b1c");
+        if (res.ok) {
+          const data = await res.json();
+          this.users = data; // Ensure the webhook returns a JSON array
+        } else {
+          alert("Failed to fetch data");
+        }
+      } catch (err) {
+        console.error("Error fetching:", err);
       }
-    ],
+    },
+    addUser() {
+      this.users.push({
+        first_name: "",
+        last_name: "",
+        account_id: "",
+        industry: "",
+        indus_id: "",
+        q: "",
+        topic_token: "",
+        section_token: "",
+        geography: "",
+        scheduled_time: ""
+      });
+    },
     async save(user) {
-      const webhookUrl = "https://your-n8n-instance.com/webhook/save-profile-config";
-
-      const payload = {
-        ...user
-      };
+      const webhookUrl = "https://n8n.sapidblue.in/webhook/save-profile-config"; // <-- Set your save webhook
 
       try {
         const res = await fetch(webhookUrl, {
@@ -90,20 +93,20 @@ function dashboard() {
           headers: {
             "Content-Type": "application/json"
           },
-          body: JSON.stringify(payload)
+          body: JSON.stringify(user)
         });
 
         if (res.ok) {
-          alert(`Saved config for ${user.name}`);
+          alert(`Saved ${user.first_name} ${user.last_name}`);
         } else {
-          alert(`Failed to save for ${user.name}`);
+          alert("Failed to save. Check webhook.");
         }
-      } catch (e) {
-        console.error(e);
-        alert("Error sending data to n8n");
+      } catch (err) {
+        console.error(err);
+        alert("Error calling webhook");
       }
     }
-  };
+  }
 }
 </script>
 </html>
