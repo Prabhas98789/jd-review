@@ -69,7 +69,22 @@ function dashboard() {
         const res = await fetch("https://n8n.sapidblue.in/webhook/66e1af8f-9c6d-4c2c-844a-889c34506b1c");
         if (res.ok) {
           const data = await res.json();
-          this.users = data;
+          this.users = data.map(u => ({
+            first_name: u.first_name || "",
+            last_name: u.last_name || "",
+            account_id: u.account_id || "",
+            industry: u.industry || "",
+            indus_id: u.indus_id || "",
+            q: u.q || "",
+            topic_token: u.topic_token || "",
+            section_token: u.section_token || "",
+            geography: u.geography || "",
+            scheduled_time: (u.scheduled_time || "").slice(0, 5), // convert '15:00:00' → '15:00'
+            id: u.id || null,
+            name: u.name || "",
+            unipile_user_id: u.unipile_user_id || "",
+            active: u.active ?? 1
+          }));
         } else {
           alert("Failed to fetch data");
         }
@@ -92,7 +107,7 @@ function dashboard() {
       });
     },
     async save(user) {
-      const webhookUrl = "https://n8n.sapidblue.in/webhook/save-profile-config"; // Update if needed
+      const webhookUrl = "https://n8n.sapidblue.in/webhook/save-profile-config"; // Replace with your POST webhook
       try {
         const res = await fetch(webhookUrl, {
           method: "POST",
