@@ -66,44 +66,26 @@ function dashboard() {
     async fetchData() {
       try {
         const res = await fetch("https://n8n.sapidblue.in/webhook/66e1af8f-9c6d-4c2c-844a-889c34506b1c");
-        if (res.ok) {
-          const raw = await res.json();
-          this.users = raw.map(u => {
-            const nameParts = (u.name || "").trim().split(" ");
-            const firstName = u.first_name || nameParts[0] || "";
-            const lastName = u.last_name || nameParts.slice(1).join(" ") || "";
+        if (!res.ok) throw new Error("Fetch failed");
 
-            const industryMap = {
-              FINTECH: "456",
-              IGAMING: "789",
-              HEALTHCARE: "321"
-            };
+        const raw = await res.json();
 
-            let topicToken = u.topic_token || "";
-            if (!topicToken && u.q) {
-              const q = u.q.toLowerCase();
-              topicToken = q.includes("ai") ? "CAAQ_AI_TOKEN"
-                          : q.includes("fintech") ? "CAAQ_FINTECH_TOKEN"
-                          : "CAAQ_GENERIC_TOKEN";
-            }
+        this.users = raw.map(u => {
+          const nameParts = (u.name || "").trim().split(" ");
+          const fallbackFirst = nameParts[0] || "";
+          const fallbackLast = nameParts.slice(1).join(" ") || "";
 
-            const scheduledTime = (u.scheduled_time || "").slice(0,5);
+          return {
+            ...u,
+            first_name: u.first_name ?? fallbackFirst,
+            last_name: u.last_name ?? fallbackLast,
+            scheduled_time: (u.scheduled_time || "").slice(0, 5)
+          };
+        });
 
-            return {
-              ...u,
-              first_name: firstName,
-              last_name: lastName,
-              indus_id: u.indus_id || industryMap[u.industry?.toUpperCase()] || "",
-              topic_token: topicToken,
-              geography: u.geography || (u.name?.toLowerCase().includes("australia") ? "AUSTRALIA" : ""),
-              scheduled_time: scheduledTime
-            };
-          });
-        } else {
-          alert("Failed to fetch data");
-        }
       } catch (err) {
         console.error("Error fetching:", err);
+        alert("Failed to load data");
       }
     },
     addUser() {
