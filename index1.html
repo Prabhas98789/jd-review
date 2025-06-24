@@ -7,11 +7,11 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
-<body class="p-6" x-data="dashboard()" x-init="fetchData()">
+<body class="p-6" x-cloak x-data="dashboard()" x-init="fetchData()">
   <div class="flex justify-between items-center mb-4">
     <h1 class="text-2xl font-bold flex items-center gap-3">
       Profile Configuration
-      <button @click="fetchData()" :disabled="loading" title="Reload data" 
+      <button @click="fetchData()" :disabled="loading" title="Reload data"
               class="text-blue-600 hover:text-blue-800 disabled:opacity-50">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -21,7 +21,7 @@
     </h1>
     <div class="flex gap-2">
       <button @click="addUser()" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">+ Add New</button>
-      <button @click="saveAll()" :disabled="saving" 
+      <button @click="saveAll()" :disabled="saving"
               class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 disabled:opacity-50">
         <template x-if="!saving">💾 Save All</template>
         <template x-if="saving">⏳ Saving...</template>
@@ -40,6 +40,7 @@
   </template>
 
   <div class="overflow-x-auto" x-show="!loading">
+    <p x-text="`Loaded ${users.length} profiles`" class="mb-2 text-gray-600"></p>
     <table class="min-w-full bg-white shadow-md rounded-xl text-sm">
       <thead class="bg-gray-100 text-gray-700">
         <tr>
@@ -98,15 +99,10 @@ function dashboard() {
         if (Array.isArray(data)) {
           list = data;
         } else if (data && typeof data === 'object') {
-          // If it's an object with numeric keys
-          if (Object.values(data).every(item => item && item.id !== undefined)) {
-            list = Object.values(data);
-          } else {
-            // Single object
-            list = [data];
-          }
+          list = Object.values(data.id !== undefined ? [data] : data).filter(Boolean);
         }
 
+        console.log('Normalized list:', list);
         this.users = list.map(u => {
           const parts = (u.name || '').trim().split(' ');
           return {
