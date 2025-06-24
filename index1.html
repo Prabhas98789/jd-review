@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en" class="bg-gray-50">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Unipile LinkedIn Profile Config</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+</head>
+<body class="p-6" x-data="dashboard()">
+  <h1 class="text-2xl font-bold mb-6">LinkedIn Profile Configuration</h1>
+
+  <div class="overflow-x-auto">
+    <table class="min-w-full bg-white shadow-md rounded-xl text-sm">
+      <thead class="bg-gray-100 text-gray-700">
+        <tr>
+          <th class="p-3 text-left">Name</th>
+          <th class="p-3">Schedule Time</th>
+          <th class="p-3">Keywords</th>
+          <th class="p-3">Location</th>
+          <th class="p-3">Connect?</th>
+          <th class="p-3">Comment?</th>
+          <th class="p-3">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <template x-for="user in users" :key="user.account_id">
+          <tr class="border-t">
+            <td class="p-3 font-semibold" x-text="user.name"></td>
+            <td class="p-3">
+              <input type="time" class="border rounded px-2 py-1" x-model="user.scheduled_time">
+            </td>
+            <td class="p-3">
+              <input type="text" class="border rounded px-2 py-1" x-model="user.search_keywords">
+            </td>
+            <td class="p-3">
+              <input type="text" class="border rounded px-2 py-1" x-model="user.search_location">
+            </td>
+            <td class="p-3 text-center">
+              <input type="checkbox" x-model="user.send_connection" class="w-4 h-4">
+            </td>
+            <td class="p-3 text-center">
+              <input type="checkbox" x-model="user.send_comment" class="w-4 h-4">
+            </td>
+            <td class="p-3 text-center">
+              <button @click="save(user)" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded">
+                Save
+              </button>
+            </td>
+          </tr>
+        </template>
+      </tbody>
+    </table>
+  </div>
+</body>
+
+<script>
+function dashboard() {
+  return {
+    users: [
+      {
+        account_id: "BLW1bjLLTTejb8A6CukWnQ",
+        name: "Prabhas Bhargav",
+        scheduled_time: "15:00",
+        search_keywords: "HR",
+        search_location: "Delhi",
+        send_connection: true,
+        send_comment: false
+      },
+      {
+        account_id: "XYZ0987LKJH",
+        name: "Ravi Mehra",
+        scheduled_time: "16:00",
+        search_keywords: "Recruiter",
+        search_location: "Bangalore",
+        send_connection: false,
+        send_comment: false
+      }
+    ],
+    async save(user) {
+      const webhookUrl = "https://your-n8n-instance.com/webhook/save-profile-config";
+
+      const payload = {
+        ...user
+      };
+
+      try {
+        const res = await fetch(webhookUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(payload)
+        });
+
+        if (res.ok) {
+          alert(`Saved config for ${user.name}`);
+        } else {
+          alert(`Failed to save for ${user.name}`);
+        }
+      } catch (e) {
+        console.error(e);
+        alert("Error sending data to n8n");
+      }
+    }
+  };
+}
+</script>
+</html>
