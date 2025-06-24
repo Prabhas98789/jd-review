@@ -65,7 +65,7 @@ function dashboard() {
     users: [],
     async fetchData() {
       try {
-        const res = await fetch("https://n8n.sapidblue.in/webhook/66e1af8f-9c6d-4c2c-844a-889c34506b1c");
+        const res = await fetch("https://n8n.sapidblue.in/webhook-test/66e1af8f-9c6d-4c2c-844a-889c34506b1c");
         if (!res.ok) throw new Error("Fetch failed");
 
         const raw = await res.json();
