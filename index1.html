@@ -85,6 +85,7 @@ function dashboard() {
       this.loading = true;
       try {
         const res = await fetch(FETCH_URL);
+        console.log("response",res)
         if (!res.ok) throw new Error(`Status ${res.status}`);
         const data = await res.json();
         // Ensure array
