@@ -24,7 +24,9 @@
     </div>
   </div>
 
-  <div class="overflow-x-auto">
+  <div x-show="loading" class="text-blue-600 mb-3 animate-pulse">⏳ Loading data from server...</div>
+
+  <div class="overflow-x-auto" x-show="!loading">
     <table class="min-w-full bg-white shadow-md rounded-xl text-sm">
       <thead class="bg-gray-100 text-gray-700">
         <tr>
@@ -63,27 +65,41 @@
 function dashboard() {
   return {
     users: [],
+    loading: false,
     async fetchData() {
+      this.loading = true;
       try {
-        const res = await fetch("https://n8n.sapidblue.in/webhook/66e1af8f-9c6d-4c2c-844a-889c34506b1c");
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 30000); // 30s timeout
+
+        const res = await fetch("https://n8n.sapidblue.in/webhook-test/66e1af8f-9c6d-4c2c-844a-889c34506b1c", {
+          signal: controller.signal
+        });
+        clearTimeout(timeout);
 
         if (!res.ok) throw new Error("Fetch failed");
 
         const raw = await res.json();
-
         this.users = raw.map(u => {
           const nameParts = (u.name || "").trim().split(" ");
           return {
-            ...u,
             first_name: u.first_name ?? nameParts[0] ?? "",
             last_name: u.last_name ?? nameParts.slice(1).join(" ") ?? "",
+            account_id: u.account_id ?? "",
+            industry: u.industry ?? "",
+            indus_id: u.indus_id ?? "",
+            q: u.q ?? "",
+            topic_token: u.topic_token ?? "",
+            section_token: u.section_token ?? "",
+            geography: u.geography ?? "",
             scheduled_time: (u.scheduled_time || "").slice(0, 5)
           };
         });
-
       } catch (err) {
         console.error("Error fetching:", err);
         alert("⚠️ Webhook is taking too long or failed. Please try again.");
+      } finally {
+        this.loading = false;
       }
     },
     addUser() {
@@ -101,9 +117,8 @@ function dashboard() {
       });
     },
     async saveAll() {
-      const webhookUrl = "https://n8n.sapidblue.in/webhook/66e1af8f-9c6d-4c2c-844a-889c34506b1c1";
       try {
-        const res = await fetch(webhookUrl, {
+        const res = await fetch("https://n8n.sapidblue.in/webhook/66e1af8f-9c6d-4c2c-844a-889c34506b1c", {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
