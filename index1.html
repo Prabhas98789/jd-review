@@ -7,7 +7,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
-<body class="p-6" x-data="dashboard()" x-init="init()">
+<body class="p-6" x-data="dashboard()" x-init="fetchData()">
   <div class="flex justify-between items-center mb-4">
     <h1 class="text-2xl font-bold flex items-center gap-3">
       Profile Configuration
@@ -35,7 +35,7 @@
         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
       </svg>
-      Loading data from server...
+      Waiting for server response...
     </div>
   </template>
 
@@ -69,82 +69,63 @@ function dashboard() {
   const SAVE_URL = 'https://n8n.sapidblue.in/webhook/66e1af8f-9c6d-4c2c-844a-889c34506b1c1';
 
   return {
-    users: [], headers: ['First Name', 'Last Name', 'Account ID', 'Industry', 'Indus ID', 'q', 'Topic Token', 'Section Token', 'Geography', 'Scheduled Time'],
+    users: [],
+    headers: ['First Name','Last Name','Account ID','Industry','Indus ID','q','Topic Token','Section Token','Geography','Scheduled Time'],
     fields: [
-      { name: 'first_name', type: 'text' },
-      { name: 'last_name', type: 'text' },
-      { name: 'account_id', type: 'text' },
-      { name: 'industry', type: 'text' },
-      { name: 'indus_id', type: 'text' },
-      { name: 'q', type: 'text' },
-      { name: 'topic_token', type: 'text' },
-      { name: 'section_token', type: 'text' },
-      { name: 'geography', type: 'text' },
-      { name: 'scheduled_time', type: 'time' }
+      { name:'first_name',type:'text' },{ name:'last_name',type:'text' },
+      { name:'account_id',type:'text' },{ name:'industry',type:'text' },
+      { name:'indus_id',type:'text' },{ name:'q',type:'text' },
+      { name:'topic_token',type:'text' },{ name:'section_token',type:'text' },
+      { name:'geography',type:'text' },{ name:'scheduled_time',type:'time' }
     ],
-    loading: false, saving: false,
-    init() {
-      this.fetchData();
-    },
+    loading: true,
+    saving: false,
+
     async fetchData() {
       this.loading = true;
-      const maxRetries = 3;
-      for (let attempt = 1; attempt <= maxRetries; attempt++) {
-        try {
-          const controller = new AbortController();
-          const timeout = setTimeout(() => controller.abort(), 30000);
-          const res = await fetch(FETCH_URL, { signal: controller.signal });
-          clearTimeout(timeout);
-
-          if (!res.ok) throw new Error(`Fetch failed (status ${res.status})`);
-          const raw = await res.json();
-          this.users = raw.map(u => {
-            const parts = (u.name || '').trim().split(' ');
-            return {
-              first_name: u.first_name ?? parts[0] ?? '',
-              last_name: u.last_name ?? parts.slice(1).join(' ') ?? '',
-              account_id: u.account_id ?? '',
-              industry: u.industry ?? '',
-              indus_id: u.indus_id ?? '',
-              q: u.q ?? '',
-              topic_token: u.topic_token ?? '',
-              section_token: u.section_token ?? '',
-              geography: u.geography ?? '',
-              scheduled_time: (u.scheduled_time || '').slice(0,5)
-            };
-          });
-          break; // success
-        } catch (err) {
-          console.error(`Attempt ${attempt} failed:`, err);
-          if (attempt === maxRetries) {
-            alert('⚠️ Failed to load data after multiple attempts. Please try again later.');
-          } else {
-            await new Promise(r => setTimeout(r, attempt * 1000)); // backoff
-          }
-        } finally {
-          if (attempt === maxRetries) this.loading = false;
-        }
+      try {
+        const res = await fetch(FETCH_URL);
+        if (!res.ok) throw new Error(`Status ${res.status}`);
+        const raw = await res.json();
+        this.users = raw.map(u => {
+          const parts = (u.name||'').trim().split(' ');
+          return {
+            first_name: u.first_name ?? parts[0] ?? '',
+            last_name: u.last_name ?? parts.slice(1).join(' ') ?? '',
+            account_id: u.account_id ?? '',
+            industry: u.industry ?? '',
+            indus_id: u.indus_id ?? '',
+            q: u.q ?? '',
+            topic_token: u.topic_token ?? '',
+            section_token: u.section_token ?? '',
+            geography: u.geography ?? '',
+            scheduled_time: (u.scheduled_time||'').slice(0,5)
+          };
+        });
+      } catch (err) {
+        console.error('Fetch error:', err);
+        alert('⚠️ Server took too long or failed.');
+      } finally {
+        this.loading = false;
       }
-      this.loading = false;
     },
+
     addUser() {
-      this.users.push(Object.fromEntries(this.fields.map(f => [f.name, ''])));
+      this.users.push(Object.fromEntries(this.fields.map(f=>[f.name,''])));
     },
+
     async saveAll() {
       this.saving = true;
       try {
-        const res = await fetch(SAVE_URL, {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(this.users)
+        const res = await fetch(SAVE_URL,{
+          method:'POST',headers:{'Content-Type':'application/json'},
+          body:JSON.stringify(this.users)
         });
-        if (res.ok) {
-          alert('✅ All profiles saved successfully.');
-        } else {
-          throw new Error(res.statusText);
-        }
+        if (!res.ok) throw new Error(res.statusText);
+        alert('✅ Saved successfully.');
       } catch (err) {
-        console.error('Save failed:', err);
-        alert('❌ Failed to save profiles. Please check your connection and try again.');
+        console.error('Save error:', err);
+        alert('❌ Save failed.');
       } finally {
         this.saving = false;
       }
