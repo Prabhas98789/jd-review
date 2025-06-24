@@ -53,8 +53,7 @@
           <tr class="border-t">
             <template x-for="field in fields" :key="field.name">
               <td class="p-2">
-                <input :type="field.type" x-model="user[field.name]" 
-                       class="w-full border rounded px-1" />
+                <input :type="field.type" x-model="user[field.name]" class="w-full border rounded px-1" />
               </td>
             </template>
           </tr>
@@ -72,11 +71,16 @@ function dashboard() {
     users: [],
     headers: ['First Name','Last Name','Account ID','Industry','Indus ID','q','Topic Token','Section Token','Geography','Scheduled Time'],
     fields: [
-      { name:'first_name',type:'text' },{ name:'last_name',type:'text' },
-      { name:'account_id',type:'text' },{ name:'industry',type:'text' },
-      { name:'indus_id',type:'text' },{ name:'q',type:'text' },
-      { name:'topic_token',type:'text' },{ name:'section_token',type:'text' },
-      { name:'geography',type:'text' },{ name:'scheduled_time',type:'time' }
+      { name:'first_name', type:'text' },
+      { name:'last_name', type:'text' },
+      { name:'account_id', type:'text' },
+      { name:'industry', type:'text' },
+      { name:'indus_id', type:'text' },
+      { name:'q', type:'text' },
+      { name:'topic_token', type:'text' },
+      { name:'section_token', type:'text' },
+      { name:'geography', type:'text' },
+      { name:'scheduled_time', type:'time' }
     ],
     loading: true,
     saving: false,
@@ -85,13 +89,26 @@ function dashboard() {
       this.loading = true;
       try {
         const res = await fetch(FETCH_URL);
-        console.log("response",res)
         if (!res.ok) throw new Error(`Status ${res.status}`);
         const data = await res.json();
-        // Ensure array
-        const list = Array.isArray(data) ? data : [data];
+        console.log('Raw response:', data);
+
+        // Normalize data into an array:
+        let list = [];
+        if (Array.isArray(data)) {
+          list = data;
+        } else if (data && typeof data === 'object') {
+          // If it's an object with numeric keys
+          if (Object.values(data).every(item => item && item.id !== undefined)) {
+            list = Object.values(data);
+          } else {
+            // Single object
+            list = [data];
+          }
+        }
+
         this.users = list.map(u => {
-          const parts = (u.name||'').trim().split(' ');
+          const parts = (u.name || '').trim().split(' ');
           return {
             first_name: u.first_name ?? parts[0] ?? '',
             last_name: u.last_name ?? parts.slice(1).join(' ') ?? '',
@@ -102,7 +119,7 @@ function dashboard() {
             topic_token: u.topic_token ?? '',
             section_token: u.section_token ?? '',
             geography: u.geography ?? '',
-            scheduled_time: (u.scheduled_time||'').slice(0,5)
+            scheduled_time: (u.scheduled_time || '').slice(0,5)
           };
         });
       } catch (err) {
@@ -114,13 +131,17 @@ function dashboard() {
     },
 
     addUser() {
-      this.users.push(Object.fromEntries(this.fields.map(f=>[f.name,''])));
+      this.users.push(Object.fromEntries(this.fields.map(f => [f.name, ''])));
     },
 
     async saveAll() {
       this.saving = true;
       try {
-        const res = await fetch(SAVE_URL,{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(this.users) });
+        const res = await fetch(SAVE_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(this.users)
+        });
         if (!res.ok) throw new Error(res.statusText);
         alert('✅ Saved successfully.');
       } catch (err) {
@@ -130,7 +151,7 @@ function dashboard() {
         this.saving = false;
       }
     }
-  }
+  };
 }
 </script>
 </body>
