@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en" class="bg-gray-100">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>LinkedIn Config Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+</head>
+<body class="p-6 font-sans" x-cloak x-data="dashboard()" x-init="fetchData()">
+  <div class="max-w-7xl mx-auto">
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-6">
+      <h1 class="text-3xl font-extrabold text-gray-800">Profile Configuration</h1>
+      <div class="flex gap-3">
+        <button @click="fetchData()" :disabled="loading"
+                class="p-2 bg-white border rounded shadow hover:bg-gray-50 disabled:opacity-50">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M4 4v5h.582M20 20v-5h-.581M5.41 19A9 9 0 113 12.6M21 5a9 9 0 01-2.41 6.4"/>
+          </svg>
+        </button>
+        <button @click="addUser()" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
+          + Add New
+        </button>
+        <button @click="saveAll()" :disabled="saving"
+                class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50">
+          <template x-if="!saving">💾 Save All</template>
+          <template x-if="saving">⏳ Saving...</template>
+        </button>
+      </div>
+    </div>
+
+    <!-- Loading -->
+    <template x-if="loading">
+      <div class="flex items-center gap-3 text-blue-600">
+        <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+        </svg>
+        <span>Loading profiles...</span>
+      </div>
+    </template>
+
+    <!-- Table -->
+    <div class="bg-white shadow-lg rounded-lg overflow-hidden" x-show="!loading">
+      <div class="px-6 py-4 border-b">
+        <span class="text-gray-600">Loaded <strong x-text="users.length"></strong> profiles</span>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="min-w-full text-left divide-y divide-gray-200">
+          <thead class="bg-gray-50 sticky top-0">
+            <tr>
+              <th class="px-4 py-3 text-sm font-medium text-gray-700">First Name</th>
+              <th class="px-4 py-3 text-sm font-medium text-gray-700">Last Name</th>
+              <th class="px-4 py-3 text-sm font-medium text-gray-700">Account ID</th>
+              <th class="px-4 py-3 text-sm font-medium text-gray-700">Industry</th>
+              <th class="px-4 py-3 text-sm font-medium text-gray-700">Category</th>
+              <th class="px-4 py-3 text-sm font-medium text-gray-700">Select Mode</th>
+              <th class="px-4 py-3 text-sm font-medium text-gray-700">Total Connections</th>
+              <th class="px-4 py-3 text-sm font-medium text-gray-700">Geography</th>
+              <th class="px-4 py-3 text-sm font-medium text-gray-700">Active</th>
+              <th class="px-4 py-3 text-sm font-medium text-gray-700">Scheduled Time</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100">
+            <template x-for="(user, idx) in users" :key="idx">
+              <tr class="hover:bg-gray-50">
+                <td class="px-4 py-2"><input type="text" x-model="user.first_name" class="w-full border rounded px-2 py-1" /></td>
+                <td class="px-4 py-2"><input type="text" x-model="user.last_name" class="w-full border rounded px-2 py-1" /></td>
+                <td class="px-4 py-2"><input type="text" x-model="user.account_id" class="w-full border rounded px-2 py-1" /></td>
+                <td class="px-4 py-2">
+                  <select x-model="user.industry" class="w-full border rounded px-2 py-1">
+                    <option value="" disabled>Select Industry</option>
+                    <template x-for="opt in industryOptions" :key="opt">
+                      <option :value="opt" x-text="opt"></option>
+                    </template>
+                  </select>
+                </td>
+                <td class="px-4 py-2">
+                  <select x-model="user.q" class="w-full border rounded px-2 py-1">
+                    <option value="" disabled>Select Category</option>
+                    <template x-for="opt in qOptions" :key="opt">
+                      <option :value="opt" x-text="opt"></option>
+                    </template>
+                  </select>
+                </td>
+                <td class="px-4 py-2">
+                  <select x-model="user.topic_token" class="w-full border rounded px-2 py-1">
+                    <option value="" disabled>Select Mode</option>
+                    <template x-for="mode in modeOptions" :key="mode">
+                      <option :value="mode" x-text="mode"></option>
+                    </template>
+                  </select>
+                </td>
+                <td class="px-4 py-2"><input type="number" x-model="user.section_token" class="w-full border rounded px-2 py-1" /></td>
+                <td class="px-4 py-2">
+                  <select x-model="user.geography" class="w-full border rounded px-2 py-1">
+                    <option value="" disabled>Select Geography</option>
+                    <template x-for="loc in geographyOptions" :key="loc">
+                      <option :value="loc" x-text="loc"></option>
+                    </template>
+                  </select>
+                </td>
+                <td class="px-4 py-2 flex justify-center">
+                  <label class="inline-flex items-center">
+                    <input type="checkbox" x-model="user.active" class="form-checkbox h-5 w-5 text-green-500" />
+                  </label>
+                </td>
+                <td class="px-4 py-2"><input type="time" x-model="user.scheduled_time" class="w-full border rounded px-2 py-1" /></td>
+              </tr>
+            </template>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+<script>
+function dashboard() {
+  const FETCH_URL = 'https://n8n.sapidblue.in/webhook/66e1af8f-9c6d-4c2c-844a-889c34506b1c';
+  const SAVE_URL = 'https://n8n.sapidblue.in/webhook/66e1af8f-9c6d-4c2c-844a-889c34506b1c1';
+
+  const industryOptions = ['AI','FINTECH','IGAMING','CYBERSECURITY'];
+  const industryMap = { AI:123, FINTECH:456, IGAMING:789, CYBERSECURITY:3130 };
+
+  const qOptions = ['AI','CYBERSECURITY','FINTECH','RETAIL','GAMING'];
+  const modeOptions = ['Con+Rec+Com','Con+Rec','Rec+Com'];
+  const geographyOptions = ['USA','UAE','SAUDI','AUSTRALIA','INDIA'];
+  const geographyMap = { USA:103644278, UAE:104305776, SAUDI:100459316, AUSTRALIA:101452733, INDIA:102713980 };
+
+  return {
+    users: [], loading: true, saving: false,
+    industryOptions, qOptions, modeOptions, geographyOptions,
+
+    async fetchData() {
+      this.loading = true;
+      try {
+        const res = await fetch(FETCH_URL);
+        const data = await res.json();
+        const list = Array.isArray(data) ? data : [data];
+        this.users = list.map(u => ({
+          first_name: u.first_name||'', last_name: u.last_name||'', account_id: u.account_id||'',
+          industry: u.industry||'', q: u.q||'', topic_token: u.topic_token||'',
+          section_token: u.section_token||'', geography: u.geography||'', active: u.active == 1,
+          scheduled_time: (u.scheduled_time||'').slice(0,5)
+        }));
+      } catch (e) {
+        console.error(e); alert('Fetch failed');
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    addUser() {
+      this.users.push({ first_name:'', last_name:'', account_id:'', industry:'', q:'', topic_token:'', section_token:'', geography:'', active:false, scheduled_time:'' });
+    },
+
+    async saveAll() {
+      this.saving = true;
+      const payload = this.users.map(u => ({
+        ...u,
+        indus_id: industryMap[u.industry]||'',
+        geography_id: geographyMap[u.geography]||'',
+        active: u.active ? 1 : 0
+      }));
+      try {
+        const res = await fetch(SAVE_URL, {
+          method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload)
+        });
+        if (!res.ok) throw new Error(); alert('✅ Saved');
+      } catch (e) {
+        console.error(e); alert('Save failed');
+      } finally {
+        this.saving = false;
+      }
+    }
+  }
+}
+</script>
+</body>
+</html>
