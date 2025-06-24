@@ -7,11 +7,12 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
-<body class="p-6" x-data="dashboard()" x-init="fetchData()">
+<body class="p-6" x-data="dashboard()" x-init="init()">
   <div class="flex justify-between items-center mb-4">
     <h1 class="text-2xl font-bold flex items-center gap-3">
       Profile Configuration
-      <button @click="fetchData" title="Reload data" class="text-blue-600 hover:text-blue-800">
+      <button @click="fetchData()" :disabled="loading" title="Reload data" 
+              class="text-blue-600 hover:text-blue-800 disabled:opacity-50">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                 d="M4 4v5h.582M20 20v-5h-.581M5.41 19A9 9 0 113 12.6M21 5a9 9 0 01-2.41 6.4"/>
@@ -19,42 +20,43 @@
       </button>
     </h1>
     <div class="flex gap-2">
-      <button @click="addUser" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">+ Add New</button>
-      <button @click="saveAll" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">💾 Save All</button>
+      <button @click="addUser()" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">+ Add New</button>
+      <button @click="saveAll()" :disabled="saving" 
+              class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 disabled:opacity-50">
+        <template x-if="!saving">💾 Save All</template>
+        <template x-if="saving">⏳ Saving...</template>
+      </button>
     </div>
   </div>
 
-  <div x-show="loading" class="text-blue-600 mb-3 animate-pulse">⏳ Loading data from server...</div>
+  <template x-if="loading">
+    <div class="text-blue-600 mb-3 flex items-center gap-2">
+      <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+      </svg>
+      Loading data from server...
+    </div>
+  </template>
 
   <div class="overflow-x-auto" x-show="!loading">
     <table class="min-w-full bg-white shadow-md rounded-xl text-sm">
       <thead class="bg-gray-100 text-gray-700">
         <tr>
-          <th class="p-2">First Name</th>
-          <th class="p-2">Last Name</th>
-          <th class="p-2">Account ID</th>
-          <th class="p-2">Industry</th>
-          <th class="p-2">Indus ID</th>
-          <th class="p-2">q</th>
-          <th class="p-2">Topic Token</th>
-          <th class="p-2">Section Token</th>
-          <th class="p-2">Geography</th>
-          <th class="p-2">Scheduled Time</th>
+          <template x-for="header in headers" :key="header">
+            <th class="p-2" x-text="header"></th>
+          </template>
         </tr>
       </thead>
       <tbody>
         <template x-for="(user, index) in users" :key="index">
           <tr class="border-t">
-            <td class="p-2"><input type="text" x-model="user.first_name" class="w-full border rounded px-1" /></td>
-            <td class="p-2"><input type="text" x-model="user.last_name" class="w-full border rounded px-1" /></td>
-            <td class="p-2"><input type="text" x-model="user.account_id" class="w-full border rounded px-1" /></td>
-            <td class="p-2"><input type="text" x-model="user.industry" class="w-full border rounded px-1" /></td>
-            <td class="p-2"><input type="text" x-model="user.indus_id" class="w-full border rounded px-1" /></td>
-            <td class="p-2"><input type="text" x-model="user.q" class="w-full border rounded px-1" /></td>
-            <td class="p-2"><input type="text" x-model="user.topic_token" class="w-full border rounded px-1" /></td>
-            <td class="p-2"><input type="text" x-model="user.section_token" class="w-full border rounded px-1" /></td>
-            <td class="p-2"><input type="text" x-model="user.geography" class="w-full border rounded px-1" /></td>
-            <td class="p-2"><input type="time" x-model="user.scheduled_time" class="w-full border rounded px-1" /></td>
+            <template x-for="field in fields" :key="field.name">
+              <td class="p-2">
+                <input :type="field.type" x-model="user[field.name]" 
+                       class="w-full border rounded px-1" />
+              </td>
+            </template>
           </tr>
         </template>
       </tbody>
@@ -63,76 +65,88 @@
 
 <script>
 function dashboard() {
+  const FETCH_URL = 'https://n8n.sapidblue.in/webhook/66e1af8f-9c6d-4c2c-844a-889c34506b1c';
+  const SAVE_URL = 'https://n8n.sapidblue.in/webhook/66e1af8f-9c6d-4c2c-844a-889c34506b1c1';
+
   return {
-    users: [],
-    loading: false,
+    users: [], headers: ['First Name', 'Last Name', 'Account ID', 'Industry', 'Indus ID', 'q', 'Topic Token', 'Section Token', 'Geography', 'Scheduled Time'],
+    fields: [
+      { name: 'first_name', type: 'text' },
+      { name: 'last_name', type: 'text' },
+      { name: 'account_id', type: 'text' },
+      { name: 'industry', type: 'text' },
+      { name: 'indus_id', type: 'text' },
+      { name: 'q', type: 'text' },
+      { name: 'topic_token', type: 'text' },
+      { name: 'section_token', type: 'text' },
+      { name: 'geography', type: 'text' },
+      { name: 'scheduled_time', type: 'time' }
+    ],
+    loading: false, saving: false,
+    init() {
+      this.fetchData();
+    },
     async fetchData() {
       this.loading = true;
-      try {
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 30000); // 30s timeout
+      const maxRetries = 3;
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+          const controller = new AbortController();
+          const timeout = setTimeout(() => controller.abort(), 30000);
+          const res = await fetch(FETCH_URL, { signal: controller.signal });
+          clearTimeout(timeout);
 
-        const res = await fetch("https://n8n.sapidblue.in/webhook/66e1af8f-9c6d-4c2c-844a-889c34506b1c", {
-          signal: controller.signal
-        });
-        clearTimeout(timeout);
-
-        if (!res.ok) throw new Error("Fetch failed");
-
-        const raw = await res.json();
-        this.users = raw.map(u => {
-          const nameParts = (u.name || "").trim().split(" ");
-          return {
-            first_name: u.first_name ?? nameParts[0] ?? "",
-            last_name: u.last_name ?? nameParts.slice(1).join(" ") ?? "",
-            account_id: u.account_id ?? "",
-            industry: u.industry ?? "",
-            indus_id: u.indus_id ?? "",
-            q: u.q ?? "",
-            topic_token: u.topic_token ?? "",
-            section_token: u.section_token ?? "",
-            geography: u.geography ?? "",
-            scheduled_time: (u.scheduled_time || "").slice(0, 5)
-          };
-        });
-      } catch (err) {
-        console.error("Error fetching:", err);
-        alert("⚠️ Webhook is taking too long or failed. Please try again.");
-      } finally {
-        this.loading = false;
+          if (!res.ok) throw new Error(`Fetch failed (status ${res.status})`);
+          const raw = await res.json();
+          this.users = raw.map(u => {
+            const parts = (u.name || '').trim().split(' ');
+            return {
+              first_name: u.first_name ?? parts[0] ?? '',
+              last_name: u.last_name ?? parts.slice(1).join(' ') ?? '',
+              account_id: u.account_id ?? '',
+              industry: u.industry ?? '',
+              indus_id: u.indus_id ?? '',
+              q: u.q ?? '',
+              topic_token: u.topic_token ?? '',
+              section_token: u.section_token ?? '',
+              geography: u.geography ?? '',
+              scheduled_time: (u.scheduled_time || '').slice(0,5)
+            };
+          });
+          break; // success
+        } catch (err) {
+          console.error(`Attempt ${attempt} failed:`, err);
+          if (attempt === maxRetries) {
+            alert('⚠️ Failed to load data after multiple attempts. Please try again later.');
+          } else {
+            await new Promise(r => setTimeout(r, attempt * 1000)); // backoff
+          }
+        } finally {
+          if (attempt === maxRetries) this.loading = false;
+        }
       }
+      this.loading = false;
     },
     addUser() {
-      this.users.push({
-        first_name: "",
-        last_name: "",
-        account_id: "",
-        industry: "",
-        indus_id: "",
-        q: "",
-        topic_token: "",
-        section_token: "",
-        geography: "",
-        scheduled_time: ""
-      });
+      this.users.push(Object.fromEntries(this.fields.map(f => [f.name, ''])));
     },
     async saveAll() {
+      this.saving = true;
       try {
-        const res = await fetch("https://n8n.sapidblue.in/webhook/66e1af8f-9c6d-4c2c-844a-889c34506b1c1", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
+        const res = await fetch(SAVE_URL, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(this.users)
         });
         if (res.ok) {
-          alert("✅ All profiles saved successfully.");
+          alert('✅ All profiles saved successfully.');
         } else {
-          alert("❌ Failed to save. Check webhook.");
+          throw new Error(res.statusText);
         }
       } catch (err) {
-        console.error(err);
-        alert("🚨 Error calling webhook");
+        console.error('Save failed:', err);
+        alert('❌ Failed to save profiles. Please check your connection and try again.');
+      } finally {
+        this.saving = false;
       }
     }
   }
