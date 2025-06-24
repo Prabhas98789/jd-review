@@ -37,10 +37,11 @@
           <th class="p-2">Last Name</th>
           <th class="p-2">Account ID</th>
           <th class="p-2">Industry</th>
-          <th class="p-2">Industry</th>
+          <th class="p-2">Category</th>
           <th class="p-2">Topic Token</th>
-          <th class="p-2">Section Token</th>
+          <th class="p-2">Total Connection Count</th>
           <th class="p-2">Geography</th>
+          <th class="p-2">Active</th>
           <th class="p-2">Scheduled Time</th>
         </tr>
       </thead>
@@ -50,7 +51,7 @@
             <td class="p-2"><input type="text" x-model="user.first_name" class="w-full border rounded px-1" /></td>
             <td class="p-2"><input type="text" x-model="user.last_name" class="w-full border rounded px-1" /></td>
             <td class="p-2"><input type="text" x-model="user.account_id" class="w-full border rounded px-1" /></td>
-            <!-- Existing Industry Dropdown -->
+            <!-- Industry Dropdown -->
             <td class="p-2">
               <select x-model="user.industry" class="w-full border rounded px-1">
                 <option value="" disabled>Select Industry</option>
@@ -59,17 +60,19 @@
                 </template>
               </select>
             </td>
-            <!-- Q field renamed to Industry dropdown -->
+            <!-- Category Dropdown -->
             <td class="p-2">
               <select x-model="user.q" class="w-full border rounded px-1">
-                <option value="" disabled>Select Industry</option>
+                <option value="" disabled>Select Category</option>
                 <template x-for="opt in qOptions" :key="opt">
                   <option x-text="opt" :value="opt"></option>
                 </template>
               </select>
             </td>
             <td class="p-2"><input type="text" x-model="user.topic_token" class="w-full border rounded px-1" /></td>
-            <td class="p-2"><input type="text" x-model="user.section_token" class="w-full border rounded px-1" /></td>
+            <!-- Total Connection Count -->
+            <td class="p-2"><input type="number" x-model="user.section_token" class="w-full border rounded px-1" /></td>
+            <!-- Geography Dropdown -->
             <td class="p-2">
               <select x-model="user.geography" class="w-full border rounded px-1">
                 <option value="" disabled>Select Geography</option>
@@ -77,6 +80,12 @@
                   <option x-text="loc" :value="loc"></option>
                 </template>
               </select>
+            </td>
+            <!-- Active Toggle -->
+            <td class="p-2 flex justify-center">
+              <label class="inline-flex items-center cursor-pointer">
+                <input type="checkbox" x-model="user.active" class="form-checkbox h-5 w-5 text-blue-600" />
+              </label>
             </td>
             <td class="p-2"><input type="time" x-model="user.scheduled_time" class="w-full border rounded px-1" /></td>
           </tr>
@@ -108,16 +117,23 @@ function dashboard() {
         const data = await res.json();
         const list = Array.isArray(data) ? data : [data];
         this.users = list.map(u => ({
-          first_name: u.first_name||'', last_name: u.last_name||'', account_id: u.account_id||'',
-          industry: u.industry||'', q: u.q||'', topic_token: u.topic_token||'',
-          section_token: u.section_token||'', geography: u.geography||'', scheduled_time: (u.scheduled_time||'').slice(0,5)
+          first_name: u.first_name||'',
+          last_name: u.last_name||'',
+          account_id: u.account_id||'',
+          industry: u.industry||'',
+          q: u.q||'',
+          topic_token: u.topic_token||'',
+          section_token: u.section_token||'',
+          geography: u.geography||'',
+          active: u.active == 1,
+          scheduled_time: (u.scheduled_time||'').slice(0,5)
         }));
       } catch(e) { console.error(e); alert('Fetch failed'); }
       finally { this.loading = false; }
     },
 
     addUser() {
-      this.users.push({ first_name:'', last_name:'', account_id:'', industry:'', q:'', topic_token:'', section_token:'', geography:'', scheduled_time:'' });
+      this.users.push({ first_name:'', last_name:'', account_id:'', industry:'', q:'', topic_token:'', section_token:'', geography:'', active:false, scheduled_time:'' });
     },
 
     async saveAll() {
@@ -125,10 +141,15 @@ function dashboard() {
       const payload = this.users.map(u => ({
         ...u,
         indus_id: industryMap[u.industry]||'',
-        geography_id: geographyMap[u.geography]||''
+        geography_id: geographyMap[u.geography]||'',
+        active: u.active ? 1 : 0
       }));
       try {
-        const res = await fetch(SAVE_URL, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) });
+        const res = await fetch(SAVE_URL, {
+          method: 'POST',
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify(payload)
+        });
         if (!res.ok) throw new Error(); alert('✅ Saved');
       } catch(e) { console.error(e); alert('Save failed'); }
       finally { this.saving = false; }
