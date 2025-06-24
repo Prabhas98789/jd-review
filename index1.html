@@ -72,7 +72,7 @@ function dashboard() {
         const controller = new AbortController();
         const timeout = setTimeout(() => controller.abort(), 30000); // 30s timeout
 
-        const res = await fetch("https://n8n.sapidblue.in/webhook-test/66e1af8f-9c6d-4c2c-844a-889c34506b1c", {
+        const res = await fetch("https://n8n.sapidblue.in/webhook/66e1af8f-9c6d-4c2c-844a-889c34506b1c", {
           signal: controller.signal
         });
         clearTimeout(timeout);
@@ -118,7 +118,7 @@ function dashboard() {
     },
     async saveAll() {
       try {
-        const res = await fetch("https://n8n.sapidblue.in/webhook/66e1af8f-9c6d-4c2c-844a-889c34506b1c", {
+        const res = await fetch("https://n8n.sapidblue.in/webhook/66e1af8f-9c6d-4c2c-844a-889c34506b1c1", {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
