@@ -9,7 +9,15 @@
 </head>
 <body class="p-6" x-data="dashboard()" x-init="fetchData()">
   <div class="flex justify-between items-center mb-4">
-    <h1 class="text-2xl font-bold">Profile Configuration</h1>
+    <h1 class="text-2xl font-bold flex items-center gap-3">
+      Profile Configuration
+      <button @click="fetchData" title="Reload data" class="text-blue-600 hover:text-blue-800">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M4 4v5h.582M20 20v-5h-.581M5.41 19A9 9 0 113 12.6M21 5a9 9 0 01-2.41 6.4"/>
+        </svg>
+      </button>
+    </h1>
     <button @click="addUser" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">+ Add New</button>
   </div>
 
@@ -51,7 +59,6 @@
       </tbody>
     </table>
   </div>
-</body>
 
 <script>
 function dashboard() {
@@ -62,7 +69,7 @@ function dashboard() {
         const res = await fetch("https://n8n.sapidblue.in/webhook/66e1af8f-9c6d-4c2c-844a-889c34506b1c");
         if (res.ok) {
           const data = await res.json();
-          this.users = data; // Ensure the webhook returns a JSON array
+          this.users = data;
         } else {
           alert("Failed to fetch data");
         }
@@ -85,8 +92,7 @@ function dashboard() {
       });
     },
     async save(user) {
-      const webhookUrl = "https://n8n.sapidblue.in/webhook/save-profile-config"; // <-- Set your save webhook
-
+      const webhookUrl = "https://n8n.sapidblue.in/webhook/save-profile-config"; // Update if needed
       try {
         const res = await fetch(webhookUrl, {
           method: "POST",
@@ -95,18 +101,18 @@ function dashboard() {
           },
           body: JSON.stringify(user)
         });
-
         if (res.ok) {
-          alert(`Saved ${user.first_name} ${user.last_name}`);
+          alert(`Saved ${user.first_name || ""} ${user.last_name || ""}`);
         } else {
           alert("Failed to save. Check webhook.");
         }
       } catch (err) {
         console.error(err);
-        alert("Error calling webhook");
+        alert("Error calling save webhook");
       }
     }
   }
 }
 </script>
+</body>
 </html>
