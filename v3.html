@@ -12,20 +12,39 @@
     <!-- Header -->
     <div class="flex justify-between items-center mb-6">
       <h1 class="text-3xl font-extrabold text-gray-800">Profile Configuration</h1>
-      <div class="flex gap-3">
-        <button @click="fetchData()" :disabled="loading" class="p-2 bg-white border rounded shadow hover:bg-gray-50 disabled:opacity-50">
-          <!-- Reload Icon -->
+      <div class="flex gap-4">
+        <!-- Reload Button -->
+        <button @click="fetchData()" :disabled="loading"
+                class="flex items-center justify-center p-2 bg-white rounded-full shadow hover:bg-gray-50 transition disabled:opacity-50">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M4 4v5h.582M20 20v-5h-.581M5.41 19A9 9 0 113 12.6M21 5a9 9 0 01-2.41 6.4"/>
+          </svg>
         </button>
         <!-- Edit Toggle -->
-        <button @click="editing = !editing" class="px-4 py-2" :class="editing ? 'bg-red-500 text-white hover:bg-red-600' : 'bg-yellow-500 text-white hover:bg-yellow-600'">
+        <button @click="editing = !editing"
+                class="flex items-center gap-2 px-4 py-2 rounded-full transition"
+                :class="editing ? 'bg-red-600 text-white hover:bg-red-700 shadow-lg' : 'bg-yellow-500 text-white hover:bg-yellow-600 shadow-lg'">
           <template x-if="!editing">✏️ Edit</template>
           <template x-if="editing">❌ Cancel</template>
         </button>
-        <button @click="addUser()" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700" :disabled="!editing">
-          + Add New
+        <!-- Add New -->
+        <button @click="addUser()" :disabled="!editing"
+                class="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-full hover:bg-green-700 shadow-lg transition disabled:opacity-50">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+          </svg>
+          Add New
         </button>
-        <button @click="saveAll()" :disabled="saving || !editing" class="px-4 py-2 bg-blue-700 text-white rounded shadow hover:bg-blue-800 disabled:opacity-50">
-          <template x-if="!saving">💾 Save Changes</template>
+        <!-- Save Changes -->
+        <button @click="saveAll()" :disabled="saving || !editing"
+                class="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 shadow-lg transition disabled:opacity-50">
+          <template x-if="!saving">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+            Save Changes
+          </template>
           <template x-if="saving">⏳ Saving...</template>
         </button>
       </div>
@@ -34,7 +53,10 @@
     <!-- Loading -->
     <template x-if="loading">
       <div class="flex items-center gap-3 text-blue-600">
-        <!-- Spinner Icon -->
+        <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+        </svg>
         <span>Loading profiles...</span>
       </div>
     </template>
@@ -67,27 +89,29 @@
                 <td class="px-4 py-2"><input type="text" x-model="user.last_name" :disabled="!editing" class="w-full border rounded px-2 py-1 bg-gray-50" /></td>
                 <td class="px-4 py-2"><input type="text" x-model="user.account_id" :disabled="!editing" class="w-full border rounded px-2 py-1 bg-gray-50" /></td>
                 <td class="px-4 py-2">
-                  <select x-model="user.industry" class="w-full border rounded px-2 py-1 bg-white" :disabled="false">
+                  <select x-model="user.industry" class="w-full border rounded px-2 py-1 bg-white">
                     <template x-for="opt in industryOptions" :key="opt"><option :value="opt" x-text="opt"></option></template>
                   </select>
                 </td>
                 <td class="px-4 py-2">
-                  <select x-model="user.q" class="w-full border rounded px-2 py-1 bg-white" :disabled="false">
+                  <select x-model="user.q" class="w-full border rounded px-2 py-1 bg-white">
                     <template x-for="opt in qOptions" :key="opt"><option :value="opt" x-text="opt"></option></template>
                   </select>
                 </td>
                 <td class="px-4 py-2">
-                  <select x-model="user.topic_token" class="w-full border rounded px-2 py-1 bg-white" :disabled="false">
+                  <select x-model="user.topic_token" class="w-full border rounded px-2 py-1 bg-white">
                     <template x-for="mode in modeOptions" :key="mode"><option :value="mode" x-text="mode"></option></template>
                   </select>
                 </td>
                 <td class="px-4 py-2"><input type="number" x-model="user.section_token" :disabled="!editing" class="w-full border rounded px-2 py-1 bg-gray-50" /></td>
                 <td class="px-4 py-2">
-                  <select x-model="user.geography" class="w-full border rounded px-2 py-1 bg-white" :disabled="false">
+                  <select x-model="user.geography" class="w-full border rounded px-2 py-1 bg-white">
                     <template x-for="loc in geographyOptions" :key="loc"><option :value="loc" x-text="loc"></option></template>
                   </select>
                 </td>
-                <td class="px-4 py-2 flex justify-center"><input type="checkbox" x-model="user.active" :disabled="!editing" class="form-checkbox h-5 w-5 text-green-500" /></td>
+                <td class="px-4 py-2 flex justify-center">
+                  <input type="checkbox" x-model="user.active" :disabled="!editing" class="form-checkbox h-5 w-5 text-green-500" />
+                </td>
                 <td class="px-4 py-2"><input type="time" x-model="user.scheduled_time" :disabled="!editing" class="w-full border rounded px-2 py-1 bg-gray-50" /></td>
               </tr>
             </template>
