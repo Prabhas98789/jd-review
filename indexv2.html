@@ -35,23 +35,23 @@
     <table class="min-w-full bg-white shadow-md rounded-xl text-sm">
       <thead class="bg-gray-100 text-gray-700">
         <tr>
-          <template x-for="header in headers" :key="header">
-            <th class="p-2" x-text="header"></th>
-          </template>
+          <th class="p-2">First Name</th>
+          <th class="p-2">Last Name</th>
+          <th class="p-2">Account ID</th>
+          <th class="p-2">Industry</th>
+          <th class="p-2">q</th>
+          <th class="p-2">Topic Token</th>
+          <th class="p-2">Section Token</th>
+          <th class="p-2">Geography</th>
+          <th class="p-2">Scheduled Time</th>
         </tr>
       </thead>
       <tbody>
         <template x-for="(user,index) in users" :key="index">
           <tr class="border-t">
-            <td class="p-2">
-              <input type="text" x-model="user.first_name" class="w-full border rounded px-1" />
-            </td>
-            <td class="p-2">
-              <input type="text" x-model="user.last_name" class="w-full border rounded px-1" />
-            </td>
-            <td class="p-2">
-              <input type="text" x-model="user.account_id" class="w-full border rounded px-1" />
-            </td>
+            <td class="p-2"><input type="text" x-model="user.first_name" class="w-full border rounded px-1" /></td>
+            <td class="p-2"><input type="text" x-model="user.last_name" class="w-full border rounded px-1" /></td>
+            <td class="p-2"><input type="text" x-model="user.account_id" class="w-full border rounded px-1" /></td>
             <td class="p-2">
               <select x-model="user.industry" class="w-full border rounded px-1">
                 <option value="" disabled>Select Industry</option>
@@ -59,9 +59,6 @@
                   <option x-text="opt" :value="opt"></option>
                 </template>
               </select>
-            </td>
-            <td class="p-2">
-              <input type="text" x-model="user.indus_id" readonly class="w-full border rounded px-1 bg-gray-100" />
             </td>
             <td class="p-2"><input type="text" x-model="user.q" class="w-full border rounded px-1" /></td>
             <td class="p-2"><input type="text" x-model="user.topic_token" class="w-full border rounded px-1" /></td>
@@ -84,7 +81,6 @@ function dashboard() {
 
   return {
     users: [],
-    headers: ['First Name','Last Name','Account ID','Industry','Indus ID','q','Topic Token','Section Token','Geography','Scheduled Time'],
     loading: true,
     saving: false,
     industryOptions,
@@ -95,29 +91,50 @@ function dashboard() {
         const res = await fetch(FETCH_URL);
         const data = await res.json();
         const list = Array.isArray(data) ? data : [data];
-        this.users = list.map(u=>({
-          first_name:u.first_name||'', last_name:u.last_name||'', account_id:u.account_id||'',
-          industry:u.industry||'', indus_id:u.indus_id||'', q:u.q||'',
-          topic_token:u.topic_token||'', section_token:u.section_token||'', geography:u.geography||'',
-          scheduled_time:(u.scheduled_time||'').slice(0,5)
+        this.users = list.map(u => ({
+          first_name: u.first_name||'',
+          last_name: u.last_name||'',
+          account_id: u.account_id||'',
+          industry: u.industry||'',
+          q: u.q||'',
+          topic_token: u.topic_token||'',
+          section_token: u.section_token||'',
+          geography: u.geography||'',
+          scheduled_time: (u.scheduled_time||'').slice(0,5)
         }));
-      } catch(e){ console.error(e); alert('Fetch failed'); }
-      finally{ this.loading = false; }
+      } catch(e) {
+        console.error(e);
+        alert('Fetch failed');
+      } finally {
+        this.loading = false;
+      }
     },
 
     addUser() {
-      this.users.push({ first_name:'', last_name:'', account_id:'', industry:'', indus_id:'', q:'', topic_token:'', section_token:'', geography:'', scheduled_time:'' });
+      this.users.push({ first_name:'', last_name:'', account_id:'', industry:'', q:'', topic_token:'', section_token:'', geography:'', scheduled_time:'' });
     },
 
     async saveAll() {
       this.saving = true;
-      // populate indus_id from selected industry
-      this.users.forEach(u=> u.indus_id = industryMap[u.industry]||'');
+      // map industry to its ID internally
+      const payload = this.users.map(u => ({
+        ...u,
+        indus_id: industryMap[u.industry] || ''
+      }));
+
       try {
-        const res = await fetch(SAVE_URL, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(this.users) });
-        if(res.ok) alert('✅ Saved'); else throw 0;
-      } catch(e){ console.error(e); alert('Save failed'); }
-      finally{ this.saving = false; }
+        const res = await fetch(SAVE_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        if (res.ok) alert('✅ Saved'); else throw new Error();
+      } catch(e) {
+        console.error(e);
+        alert('Save failed');
+      } finally {
+        this.saving = false;
+      }
     }
   }
 }
