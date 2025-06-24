@@ -52,6 +52,7 @@
             <td class="p-2"><input type="text" x-model="user.first_name" class="w-full border rounded px-1" /></td>
             <td class="p-2"><input type="text" x-model="user.last_name" class="w-full border rounded px-1" /></td>
             <td class="p-2"><input type="text" x-model="user.account_id" class="w-full border rounded px-1" /></td>
+            <!-- Industry Dropdown -->
             <td class="p-2">
               <select x-model="user.industry" class="w-full border rounded px-1">
                 <option value="" disabled>Select Industry</option>
@@ -63,7 +64,15 @@
             <td class="p-2"><input type="text" x-model="user.q" class="w-full border rounded px-1" /></td>
             <td class="p-2"><input type="text" x-model="user.topic_token" class="w-full border rounded px-1" /></td>
             <td class="p-2"><input type="text" x-model="user.section_token" class="w-full border rounded px-1" /></td>
-            <td class="p-2"><input type="text" x-model="user.geography" class="w-full border rounded px-1" /></td>
+            <!-- Geography Dropdown -->
+            <td class="p-2">
+              <select x-model="user.geography" class="w-full border rounded px-1">
+                <option value="" disabled>Select Geography</option>
+                <template x-for="loc in geographyOptions" :key="loc">
+                  <option x-text="loc" :value="loc"></option>
+                </template>
+              </select>
+            </td>
             <td class="p-2"><input type="time" x-model="user.scheduled_time" class="w-full border rounded px-1" /></td>
           </tr>
         </template>
@@ -79,11 +88,15 @@ function dashboard() {
   const industryOptions = ['AI','FINTECH','IGAMING','CYBERSECURITY'];
   const industryMap = { 'AI':123, 'FINTECH':456, 'IGAMING':789, 'CYBERSECURITY':3130 };
 
+  const geographyOptions = ['USA','UAE','SAUDI','AUSTRALIA','INDIA'];
+  const geographyMap = { 'USA':103644278, 'UAE':104305776, 'SAUDI':100459316, 'AUSTRALIA':101452733, 'INDIA':102713980 };
+
   return {
     users: [],
     loading: true,
     saving: false,
     industryOptions,
+    geographyOptions,
 
     async fetchData() {
       this.loading = true;
@@ -116,10 +129,11 @@ function dashboard() {
 
     async saveAll() {
       this.saving = true;
-      // map industry to its ID internally
+      // prepare payload with mapped IDs
       const payload = this.users.map(u => ({
         ...u,
-        indus_id: industryMap[u.industry] || ''
+        indus_id: industryMap[u.industry] || '',
+        geography_id: geographyMap[u.geography] || ''
       }));
 
       try {
