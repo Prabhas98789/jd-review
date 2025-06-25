@@ -184,23 +184,28 @@
               steps: this.newSequence.steps,
               interaction: this.newSequence.interaction
             };
-
+        
+            let webhookUrl = "";
+        
             if (this.newSequence.type === 'connected') {
               if (this.newSequence.connected_mode === 'url') {
                 payload.connected_targets = this.newSequence.connected_targets;
+                webhookUrl = "https://n8n.sapidblue.in/webhook/ee88a185-6867-4edb-863a-fed408b01feb";
               } else if (this.newSequence.connected_mode === 'filter') {
                 payload.filters = this.newSequence.connection_filters;
+                webhookUrl = "https://n8n.sapidblue.in/webhook/9989b633-8e27-4310-a341-55afc04bf4c8";
               }
             } else if (this.newSequence.type === 'filtered') {
               payload.filters = this.newSequence.filters;
+              webhookUrl = "https://n8n.sapidblue.in/webhook/ee88a185-6867-4edb-863a-fed408b01feb";
             }
-
-            const res = await fetch('https://n8n.sapidblue.in/webhook/ee88a185-6867-4edb-863a-fed408b01feb', {
+        
+            const res = await fetch(webhookUrl, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify(payload)
             });
-
+        
             const created = await res.json();
             this.sequences.push(created);
             this.resetNewSequence();
