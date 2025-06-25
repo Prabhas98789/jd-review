@@ -56,9 +56,16 @@
         <!-- Connected type -->
         <template x-if="newSequence.type === 'connected'">
           <div>
-            <label class="block text-sm font-medium mb-1">Select Connections</label>
-            <textarea x-model="newSequence.connected_targets" class="w-full border px-3 py-2 rounded mb-2" placeholder="Paste LinkedIn profile URLs or IDs, comma-separated"></textarea>
-            <small class="text-gray-500">Enter comma-separated LinkedIn profile URLs or IDs</small>
+            <label class="block text-sm font-medium mb-1">Select from Connections</label>
+            <select multiple class="w-full border px-3 py-2 rounded h-40 overflow-y-auto" x-model="selectedConnections">
+              <template x-for="conn in connections" :key="conn.member_id">
+                <option :value="conn.member_id" x-text="conn.first_name + ' ' + conn.last_name + ' - ' + conn.headline"></option>
+              </template>
+            </select>
+
+            <label class="block text-sm font-medium mt-4 mb-1">Paste LinkedIn URLs (Optional)</label>
+            <textarea x-model="newSequence.connected_targets" class="w-full border px-3 py-2 rounded mb-2" placeholder="Comma-separated LinkedIn profile URLs or IDs"></textarea>
+            <small class="text-gray-500">You can use both selections and manual URLs</small>
 
             <label class="block text-sm font-medium mt-4 mb-1">Interaction</label>
             <div class="flex items-center space-x-2 mb-4">
@@ -113,6 +120,8 @@
       return {
         account_id: new URLSearchParams(window.location.search).get('uid'),
         sequences: [],
+        connections: [],
+        selectedConnections: [],
         loading: false,
         showNewSequenceModal: false,
         newSequence: {
@@ -138,6 +147,7 @@
         async init() {
           if (!this.account_id) return alert("Missing account ID");
           await this.fetchSequences();
+          await this.fetchConnections();
         },
 
         async fetchSequences() {
@@ -157,14 +167,29 @@
           }
         },
 
+        async fetchConnections() {
+          try {
+            const res = await fetch('https://n8n.sapidblue.in/webhook/9989b633-8e27-4310-a341-55afc04bf4c8', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ account_id: this.account_id })
+            });
+            const data = await res.json();
+            this.connections = Array.isArray(data) ? data : [];
+          } catch (err) {
+            console.error("Failed to load connections", err);
+          }
+        },
+
         async createSequence() {
           try {
-            const res = await fetch('https://n8n.sapidblue.in/webhook/db73d44e-dc5f-4270-ab98-4426839decd4', {
+            const res = await fetch('https://n8n.sapidblue.in/webhook/ee88a185-6867-4edb-863a-fed408b01feb', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 account_id: this.account_id,
-                ...this.newSequence
+                ...this.newSequence,
+                selected_member_ids: this.selectedConnections
               })
             });
             const created = await res.json();
@@ -195,6 +220,7 @@
               comment: ''
             }
           };
+          this.selectedConnections = [];
           this.showNewSequenceModal = false;
         },
 
