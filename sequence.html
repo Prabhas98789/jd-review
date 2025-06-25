@@ -124,7 +124,7 @@
         async fetchSequences() {
           this.loading = true;
           try {
-            const res = await fetch('https://n8n.sapidblue.in/webhook/YOUR_FETCH_SEQUENCES_WEBHOOK', {
+            const res = await fetch('https://n8n.sapidblue.in/webhook/db73d44e-dc5f-4270-ab98-4426839decd4', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ account_id: this.account_id })
@@ -140,7 +140,7 @@
 
         async createSequence() {
           try {
-            const res = await fetch('https://n8n.sapidblue.in/webhook/YOUR_CREATE_SEQUENCE_WEBHOOK', {
+            const res = await fetch('https://n8n.sapidblue.in/webhook/db73d44e-dc5f-4270-ab98-4426839decd4', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
@@ -174,7 +174,7 @@
         async deleteSequence(id) {
           if (!confirm("Are you sure you want to delete this sequence?")) return;
           try {
-            await fetch('https://n8n.sapidblue.in/webhook/YOUR_DELETE_SEQUENCE_WEBHOOK', {
+            await fetch('https://n8n.sapidblue.in/webhook/db73d44e-dc5f-4270-ab98-4426839decd4', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ id, account_id: this.account_id })
