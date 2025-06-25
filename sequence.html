@@ -56,20 +56,20 @@
         <template x-if="newSequence.type === 'connected'">
           <div>
             <label class="block text-sm font-medium mb-1">Target Source</label>
-            <select x-model="newSequence.connected_target_source" class="w-full border px-3 py-2 rounded mb-4">
-              <option value="filters">Filter Connections</option>
+            <select x-model="newSequence.connected_mode" class="w-full border px-3 py-2 rounded mb-4">
+              <option value="filter">Filter Connections</option>
               <option value="url">LinkedIn URLs</option>
             </select>
 
-            <template x-if="newSequence.connected_target_source === 'filters'">
+            <template x-if="newSequence.connected_mode === 'filter'">
               <div>
-                <input x-model="newSequence.filters.location" type="text" class="w-full border px-3 py-2 rounded mb-2" placeholder="Location" />
-                <input x-model="newSequence.filters.industry" type="text" class="w-full border px-3 py-2 rounded mb-2" placeholder="Industry" />
-                <input x-model="newSequence.filters.title" type="text" class="w-full border px-3 py-2 rounded mb-2" placeholder="Title" />
+                <input x-model="newSequence.connection_filters.location" type="text" class="w-full border px-3 py-2 rounded mb-2" placeholder="Location" />
+                <input x-model="newSequence.connection_filters.industry" type="text" class="w-full border px-3 py-2 rounded mb-2" placeholder="Industry" />
+                <input x-model="newSequence.connection_filters.title" type="text" class="w-full border px-3 py-2 rounded mb-2" placeholder="Title" />
               </div>
             </template>
 
-            <template x-if="newSequence.connected_target_source === 'url'">
+            <template x-if="newSequence.connected_mode === 'url'">
               <textarea x-model="newSequence.connected_targets" class="w-full border px-3 py-2 rounded mb-2" placeholder="Comma-separated LinkedIn profile URLs or IDs"></textarea>
             </template>
 
@@ -130,9 +130,14 @@
         newSequence: {
           name: '',
           type: 'connected',
-          connected_target_source: 'filters',
+          connected_mode: 'filter',
           steps: [],
           connected_targets: '',
+          connection_filters: {
+            location: '',
+            industry: '',
+            title: ''
+          },
           filters: {
             location: '',
             industry: '',
@@ -181,10 +186,10 @@
             };
 
             if (this.newSequence.type === 'connected') {
-              if (this.newSequence.connected_target_source === 'url') {
+              if (this.newSequence.connected_mode === 'url') {
                 payload.connected_targets = this.newSequence.connected_targets;
-              } else if (this.newSequence.connected_target_source === 'filters') {
-                payload.filters = this.newSequence.filters;
+              } else if (this.newSequence.connected_mode === 'filter') {
+                payload.filters = this.newSequence.connection_filters;
               }
             } else if (this.newSequence.type === 'filtered') {
               payload.filters = this.newSequence.filters;
@@ -209,9 +214,14 @@
           this.newSequence = {
             name: '',
             type: 'connected',
-            connected_target_source: 'filters',
+            connected_mode: 'filter',
             steps: [],
             connected_targets: '',
+            connection_filters: {
+              location: '',
+              industry: '',
+              title: ''
+            },
             filters: {
               location: '',
               industry: '',
