@@ -41,7 +41,7 @@
   <!-- New Sequence Modal -->
   <template x-if="showNewSequenceModal">
     <div class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center">
-      <div class="bg-white p-6 rounded shadow w-full max-w-xl">
+      <div class="bg-white p-6 rounded shadow w-full max-w-xl max-h-screen overflow-y-auto">
         <h2 class="text-xl font-semibold mb-4">Create New Sequence</h2>
 
         <label class="block text-sm font-medium mb-1">Sequence Name</label>
@@ -56,7 +56,11 @@
         <!-- Connected type -->
         <template x-if="newSequence.type === 'connected'">
           <div>
-            <label class="block text-sm font-medium mb-1">Interaction</label>
+            <label class="block text-sm font-medium mb-1">Select Connections</label>
+            <textarea x-model="newSequence.connected_targets" class="w-full border px-3 py-2 rounded mb-2" placeholder="Paste LinkedIn profile URLs or IDs, comma-separated"></textarea>
+            <small class="text-gray-500">Enter comma-separated LinkedIn profile URLs or IDs</small>
+
+            <label class="block text-sm font-medium mt-4 mb-1">Interaction</label>
             <div class="flex items-center space-x-2 mb-4">
               <label><input type="checkbox" x-model="newSequence.interaction.like" class="mr-1">Like recent post</label>
               <label><input type="checkbox" x-model="newSequence.interaction.commentEnabled" class="mr-1">Comment</label>
@@ -71,11 +75,22 @@
             <label class="block text-sm font-medium mb-1">Filter Criteria</label>
             <input x-model="newSequence.filters.location" type="text" class="w-full border px-3 py-2 rounded mb-2" placeholder="Location" />
             <input x-model="newSequence.filters.industry" type="text" class="w-full border px-3 py-2 rounded mb-2" placeholder="Industry" />
-            <input x-model="newSequence.filters.title" type="text" class="w-full border px-3 py-2 rounded mb-4" placeholder="Title" />
+            <input x-model="newSequence.filters.title" type="text" class="w-full border px-3 py-2 rounded mb-2" placeholder="Title" />
+            <input x-model="newSequence.filters.company" type="text" class="w-full border px-3 py-2 rounded mb-2" placeholder="Company" />
+            <select x-model="newSequence.filters.seniority" class="w-full border px-3 py-2 rounded mb-2">
+              <option value="">Seniority</option>
+              <option value="junior">Junior</option>
+              <option value="mid">Mid</option>
+              <option value="senior">Senior</option>
+              <option value="executive">Executive</option>
+            </select>
+            <label class="inline-flex items-center mt-2">
+              <input type="checkbox" x-model="newSequence.filters.open_to_connect" class="mr-2"> Only open to connect
+            </label>
           </div>
         </template>
 
-        <label class="block text-sm font-medium mb-1">Steps</label>
+        <label class="block text-sm font-medium mb-1 mt-4">Steps</label>
         <template x-for="(step, index) in newSequence.steps" :key="index">
           <div class="mb-2 flex items-center space-x-2">
             <input x-model="step.text" type="text" class="flex-1 border px-3 py-2 rounded" placeholder="Message step..." />
@@ -83,11 +98,11 @@
             <button @click="removeStep(index)" class="text-red-600 text-sm">❌</button>
           </div>
         </template>
-        <button @click="addStep" class="mb-4 text-blue-600 text-sm">➕ Add Step</button>
+        <button @click="addStep()" class="mb-4 text-blue-600 text-sm">➕ Add Step</button>
 
         <div class="text-right space-x-2">
           <button @click="showNewSequenceModal = false" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">Cancel</button>
-          <button @click="createSequence" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Create</button>
+          <button @click="createSequence()" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Create</button>
         </div>
       </div>
     </div>
@@ -104,10 +119,14 @@
           name: '',
           type: 'connected',
           steps: [],
+          connected_targets: '',
           filters: {
             location: '',
             industry: '',
-            title: ''
+            title: '',
+            company: '',
+            seniority: '',
+            open_to_connect: false
           },
           interaction: {
             like: false,
@@ -161,8 +180,20 @@
             name: '',
             type: 'connected',
             steps: [],
-            filters: { location: '', industry: '', title: '' },
-            interaction: { like: false, commentEnabled: false, comment: '' }
+            connected_targets: '',
+            filters: {
+              location: '',
+              industry: '',
+              title: '',
+              company: '',
+              seniority: '',
+              open_to_connect: false
+            },
+            interaction: {
+              like: false,
+              commentEnabled: false,
+              comment: ''
+            }
           };
           this.showNewSequenceModal = false;
         },
