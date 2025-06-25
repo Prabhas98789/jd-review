@@ -62,22 +62,22 @@
 
         async init() {
           const params = new URLSearchParams(window.location.search);
-          const provider_id = params.get('uid');
-          if (!provider_id) return alert('Missing provider ID');
-          await this.fetchProfile(provider_id);
+          const account_id = params.get('uid');
+          if (!account_id) return alert('Missing account ID');
+          await this.fetchProfile(account_id);
         },
 
-        async fetchProfile(provider_id) {
+        async fetchProfile(account_id) {
           this.loading = true;
           try {
             const res = await fetch("https://n8n.sapidblue.in/webhook/de46a431-75ad-4ec1-8056-0254b273f779", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ provider_id })
+              body: JSON.stringify({ account_id })
             });
             const data = await res.json();
-            this.profile = data.profile;
-            this.organizations = data.organizations;
+            this.profile = data;
+            this.organizations = data.organizations || [];
           } catch (err) {
             alert("Error loading profile");
             console.error(err);
@@ -87,19 +87,19 @@
         },
 
         async reloadProfile() {
-          const provider_id = this.profile?.provider_id;
-          if (!provider_id) return;
+          const account_id = this.profile?.account_id;
+          if (!account_id) return;
 
           this.loading = true;
           try {
             const res = await fetch("https://n8n.sapidblue.in/webhook/5cb8ca06-4b94-4448-a9f3-2045a418cd8c", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ provider_id })
+              body: JSON.stringify({ account_id })
             });
             const data = await res.json();
-            this.profile = data.profile;
-            this.organizations = data.organizations;
+            this.profile = data;
+            this.organizations = data.organizations || [];
           } catch (err) {
             alert("Error refreshing profile");
             console.error(err);
