@@ -49,6 +49,7 @@
       return {
         account_id: new URLSearchParams(window.location.search).get('uid'),
         connections: [],
+        allConnections: [],
         loading: false,
         cursor: null,
         canNext: true,
@@ -69,10 +70,11 @@
             });
             const data = await res.json();
             const newConnections = Array.isArray(data) ? data : (data.connections || []);
-            if (newConnections.length > 0) {
-              this.connections = newConnections;
+
+            if (newConnections.length > this.connections.length) {
+              this.connections = newConnections.slice(this.connections.length);
               this.cursor = data.next_cursor || null;
-              this.canNext = !!this.cursor || newConnections.length === 50;
+              this.canNext = !!this.cursor;
             } else {
               await this.fetchExtendedConnections();
             }
@@ -93,9 +95,13 @@
             });
             const data = await res.json();
             const extended = Array.isArray(data) ? data : (data.connections || []);
-            this.connections = extended;
-            this.cursor = data.next_cursor || null;
-            this.canNext = !!this.cursor;
+            if (extended.length > this.connections.length) {
+              this.connections = extended.slice(this.connections.length);
+              this.cursor = data.next_cursor || null;
+              this.canNext = !!this.cursor;
+            } else {
+              this.canNext = false;
+            }
           } catch (err) {
             alert("Failed to load extended connections");
             console.error(err);
