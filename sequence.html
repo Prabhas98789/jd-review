@@ -182,22 +182,39 @@
         },
 
         async createSequence() {
-          try {
-            const res = await fetch('https://n8n.sapidblue.in/webhook/ee88a185-6867-4edb-863a-fed408b01feb', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                account_id: this.account_id,
-                ...this.newSequence
-              })
-            });
-            const created = await res.json();
-            this.sequences.push(created);
-            this.resetNewSequence();
-          } catch (err) {
-            alert("Failed to create sequence");
-          }
-        },
+  try {
+    const payload = {
+      account_id: this.account_id,
+      name: this.newSequence.name,
+      type: this.newSequence.type,
+      steps: this.newSequence.steps,
+      interaction: this.newSequence.interaction
+    };
+
+    if (this.newSequence.type === 'connected') {
+      if (this.newSequence.connected_target_source === 'url') {
+        payload.connected_targets = this.newSequence.connected_targets;
+      } else if (this.newSequence.connected_target_source === 'filters') {
+        payload.filters = this.newSequence.filters;
+      }
+    } else if (this.newSequence.type === 'filtered') {
+      payload.filters = this.newSequence.filters;
+    }
+
+    const res = await fetch('https://n8n.sapidblue.in/webhook/ee88a185-6867-4edb-863a-fed408b01feb', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    const created = await res.json();
+    this.sequences.push(created);
+    this.resetNewSequence();
+  } catch (err) {
+    console.error("Failed to create sequence", err);
+    alert("Failed to create sequence");
+  }
+},
 
         resetNewSequence() {
           this.newSequence = {
