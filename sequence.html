@@ -23,7 +23,7 @@
         <div class="bg-white p-4 rounded shadow flex justify-between items-center">
           <div>
             <h2 class="text-lg font-semibold" x-text="seq.name"></h2>
-            <p class="text-sm text-gray-600">Steps: <span x-text="seq.steps.length"></span> | Targets: <span x-text="seq.target_count"></span></p>
+            <p class="text-sm text-gray-600">Type: <span x-text="seq.type"></span> | Steps: <span x-text="seq.steps.length"></span> | Targets: <span x-text="seq.target_count"></span></p>
           </div>
           <div class="flex space-x-2">
             <button @click="editSequence(seq)" class="px-3 py-1 bg-yellow-500 text-white text-sm rounded hover:bg-yellow-600">✏️ Edit</button>
@@ -41,16 +41,45 @@
   <!-- New Sequence Modal -->
   <template x-if="showNewSequenceModal">
     <div class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center">
-      <div class="bg-white p-6 rounded shadow w-full max-w-lg">
+      <div class="bg-white p-6 rounded shadow w-full max-w-xl">
         <h2 class="text-xl font-semibold mb-4">Create New Sequence</h2>
 
         <label class="block text-sm font-medium mb-1">Sequence Name</label>
         <input x-model="newSequence.name" type="text" class="w-full border px-3 py-2 rounded mb-4" placeholder="Enter sequence name" />
 
+        <label class="block text-sm font-medium mb-1">Sequence Type</label>
+        <select x-model="newSequence.type" class="w-full border px-3 py-2 rounded mb-4">
+          <option value="connected">1st-Degree (Connected)</option>
+          <option value="filtered">2nd-Degree (Filtered)</option>
+        </select>
+
+        <!-- Connected type -->
+        <template x-if="newSequence.type === 'connected'">
+          <div>
+            <label class="block text-sm font-medium mb-1">Interaction</label>
+            <div class="flex items-center space-x-2 mb-4">
+              <label><input type="checkbox" x-model="newSequence.interaction.like" class="mr-1">Like recent post</label>
+              <label><input type="checkbox" x-model="newSequence.interaction.commentEnabled" class="mr-1">Comment</label>
+              <input x-show="newSequence.interaction.commentEnabled" x-model="newSequence.interaction.comment" type="text" class="ml-2 flex-1 border px-2 py-1 rounded" placeholder="Your comment...">
+            </div>
+          </div>
+        </template>
+
+        <!-- Filtered type -->
+        <template x-if="newSequence.type === 'filtered'">
+          <div>
+            <label class="block text-sm font-medium mb-1">Filter Criteria</label>
+            <input x-model="newSequence.filters.location" type="text" class="w-full border px-3 py-2 rounded mb-2" placeholder="Location" />
+            <input x-model="newSequence.filters.industry" type="text" class="w-full border px-3 py-2 rounded mb-2" placeholder="Industry" />
+            <input x-model="newSequence.filters.title" type="text" class="w-full border px-3 py-2 rounded mb-4" placeholder="Title" />
+          </div>
+        </template>
+
         <label class="block text-sm font-medium mb-1">Steps</label>
         <template x-for="(step, index) in newSequence.steps" :key="index">
           <div class="mb-2 flex items-center space-x-2">
             <input x-model="step.text" type="text" class="flex-1 border px-3 py-2 rounded" placeholder="Message step..." />
+            <input x-model="step.delay" type="number" min="0" class="w-24 border px-2 py-2 rounded" placeholder="Delay (min)" />
             <button @click="removeStep(index)" class="text-red-600 text-sm">❌</button>
           </div>
         </template>
@@ -73,7 +102,18 @@
         showNewSequenceModal: false,
         newSequence: {
           name: '',
-          steps: []
+          type: 'connected',
+          steps: [],
+          filters: {
+            location: '',
+            industry: '',
+            title: ''
+          },
+          interaction: {
+            like: false,
+            commentEnabled: false,
+            comment: ''
+          }
         },
 
         async init() {
@@ -105,17 +145,26 @@
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 account_id: this.account_id,
-                name: this.newSequence.name,
-                steps: this.newSequence.steps
+                ...this.newSequence
               })
             });
             const created = await res.json();
             this.sequences.push(created);
-            this.newSequence = { name: '', steps: [] };
-            this.showNewSequenceModal = false;
+            this.resetNewSequence();
           } catch (err) {
             alert("Failed to create sequence");
           }
+        },
+
+        resetNewSequence() {
+          this.newSequence = {
+            name: '',
+            type: 'connected',
+            steps: [],
+            filters: { location: '', industry: '', title: '' },
+            interaction: { like: false, commentEnabled: false, comment: '' }
+          };
+          this.showNewSequenceModal = false;
         },
 
         editSequence(seq) {
@@ -137,7 +186,7 @@
         },
 
         addStep() {
-          this.newSequence.steps.push({ text: '' });
+          this.newSequence.steps.push({ text: '', delay: 0 });
         },
 
         removeStep(index) {
