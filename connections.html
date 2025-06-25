@@ -68,14 +68,36 @@
               body: JSON.stringify({ account_id: this.account_id, cursor: this.cursor })
             });
             const data = await res.json();
-            this.connections = Array.isArray(data) ? data : (data.connections || []);
-            this.cursor = data.next_cursor || null;
-            this.canNext = !!this.cursor;
+            const newConnections = Array.isArray(data) ? data : (data.connections || []);
+            if (newConnections.length > 0) {
+              this.connections = newConnections;
+              this.cursor = data.next_cursor || null;
+              this.canNext = !!this.cursor;
+            } else {
+              await this.fetchFromRefreshWebhook();
+            }
           } catch (err) {
             alert("Failed to fetch connections");
             console.error(err);
           } finally {
             this.loading = false;
+          }
+        },
+
+        async fetchFromRefreshWebhook() {
+          try {
+            const res = await fetch('https://n8n.sapidblue.in/webhook/db73d44e-dc5f-4270-ab98-4426839decd4', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ account_id: this.account_id, cursor: this.cursor })
+            });
+            const data = await res.json();
+            this.connections = Array.isArray(data) ? data : (data.connections || []);
+            this.cursor = data.next_cursor || null;
+            this.canNext = !!this.cursor;
+          } catch (err) {
+            alert("Failed to refresh from fallback webhook");
+            console.error(err);
           }
         },
 
@@ -87,6 +109,7 @@
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ account_id: this.account_id })
             });
+            this.cursor = null;
             await this.fetchConnections();
           } catch (err) {
             alert("Failed to refresh connections");
