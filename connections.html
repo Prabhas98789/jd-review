@@ -19,9 +19,9 @@
     <div class="text-blue-600">Loading connections...</div>
   </template>
 
-  <template x-if="!loading && connections.length">
+  <template x-if="!loading && paginatedConnections.length">
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      <template x-for="conn in connections" :key="conn.member_id">
+      <template x-for="conn in paginatedConnections" :key="conn.member_id">
         <div class="bg-white p-4 rounded shadow">
           <div class="flex items-center space-x-4">
             <img :src="conn.profile_picture_url" alt="Profile" class="w-16 h-16 rounded-full object-cover border" />
@@ -35,7 +35,7 @@
     </div>
   </template>
 
-  <template x-if="!loading && !connections.length">
+  <template x-if="!loading && !paginatedConnections.length">
     <div class="text-gray-500">No connections found.</div>
   </template>
 
@@ -49,11 +49,17 @@
       return {
         account_id: new URLSearchParams(window.location.search).get('uid'),
         connections: [],
-        allConnections: [],
+        pageIndex: 0,
+        pageSize: 50,
         loading: false,
         cursor: null,
         canNext: true,
         canPrev: false,
+
+        get paginatedConnections() {
+          const start = this.pageIndex * this.pageSize;
+          return this.connections.slice(start, start + this.pageSize);
+        },
 
         async init() {
           if (!this.account_id) return alert("Missing account ID");
@@ -72,9 +78,9 @@
             const newConnections = Array.isArray(data) ? data : (data.connections || []);
 
             if (newConnections.length > this.connections.length) {
-              this.connections = newConnections.slice(this.connections.length);
+              this.connections = newConnections;
               this.cursor = data.next_cursor || (newConnections.length ? newConnections[newConnections.length - 1].cursor : null);
-              this.canNext = !!this.cursor;
+              this.canNext = this.connections.length > (this.pageIndex + 1) * this.pageSize || !!this.cursor;
             } else {
               await this.fetchExtendedConnections();
             }
@@ -96,9 +102,9 @@
             const data = await res.json();
             const extended = Array.isArray(data) ? data : (data.connections || []);
             if (extended.length > this.connections.length) {
-              this.connections = extended.slice(this.connections.length);
+              this.connections = extended;
               this.cursor = data.next_cursor || (extended.length ? extended[extended.length - 1].cursor : null);
-              this.canNext = !!this.cursor;
+              this.canNext = this.connections.length > (this.pageIndex + 1) * this.pageSize || !!this.cursor;
             } else {
               this.canNext = false;
             }
@@ -117,6 +123,7 @@
               body: JSON.stringify({ account_id: this.account_id })
             });
             this.cursor = null;
+            this.pageIndex = 0;
             await this.fetchConnections();
           } catch (err) {
             alert("Failed to refresh connections");
@@ -127,12 +134,27 @@
         },
 
         async loadNextPage() {
-          if (!this.canNext) return;
-          await this.fetchConnections();
+          const nextPageStart = (this.pageIndex + 1) * this.pageSize;
+          if (nextPageStart < this.connections.length) {
+            this.pageIndex++;
+            this.canPrev = this.pageIndex > 0;
+            this.canNext = this.connections.length > (this.pageIndex + 1) * this.pageSize || !!this.cursor;
+          } else if (this.cursor) {
+            await this.fetchExtendedConnections();
+            this.pageIndex++;
+            this.canPrev = this.pageIndex > 0;
+            this.canNext = this.connections.length > (this.pageIndex + 1) * this.pageSize || !!this.cursor;
+          } else {
+            this.canNext = false;
+          }
         },
 
         loadPrevPage() {
-          alert('Previous page not implemented');
+          if (this.pageIndex > 0) {
+            this.pageIndex--;
+            this.canPrev = this.pageIndex > 0;
+            this.canNext = true;
+          }
         }
       }
     }
