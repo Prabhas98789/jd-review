@@ -72,18 +72,12 @@
             const res = await fetch('https://n8n.sapidblue.in/webhook/9989b633-8e27-4310-a341-55afc04bf4c8', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ account_id: this.account_id, cursor: this.cursor })
+              body: JSON.stringify({ account_id: this.account_id })
             });
             const data = await res.json();
-            const newConnections = Array.isArray(data) ? data : (data.connections || []);
-
-            if (newConnections.length > this.connections.length) {
-              this.connections = newConnections;
-              this.cursor = data.next_cursor || (newConnections.length ? newConnections[newConnections.length - 1].cursor : null);
-              this.canNext = this.connections.length > (this.pageIndex + 1) * this.pageSize || !!this.cursor;
-            } else {
-              await this.fetchExtendedConnections();
-            }
+            this.connections = Array.isArray(data) ? data : (data.connections || []);
+            this.cursor = this.connections.length ? this.connections[this.connections.length - 1].cursor : null;
+            this.canNext = this.connections.length > this.pageSize;
           } catch (err) {
             alert("Failed to fetch connections");
             console.error(err);
@@ -103,7 +97,7 @@
             const extended = Array.isArray(data) ? data : (data.connections || []);
             if (extended.length > this.connections.length) {
               this.connections = extended;
-              this.cursor = data.next_cursor || (extended.length ? extended[extended.length - 1].cursor : null);
+              this.cursor = extended.length ? extended[extended.length - 1].cursor : null;
               this.canNext = this.connections.length > (this.pageIndex + 1) * this.pageSize || !!this.cursor;
             } else {
               this.canNext = false;
@@ -141,9 +135,13 @@
             this.canNext = this.connections.length > (this.pageIndex + 1) * this.pageSize || !!this.cursor;
           } else if (this.cursor) {
             await this.fetchExtendedConnections();
-            this.pageIndex++;
-            this.canPrev = this.pageIndex > 0;
-            this.canNext = this.connections.length > (this.pageIndex + 1) * this.pageSize || !!this.cursor;
+            if (this.connections.length > nextPageStart) {
+              this.pageIndex++;
+              this.canPrev = this.pageIndex > 0;
+              this.canNext = this.connections.length > (this.pageIndex + 1) * this.pageSize || !!this.cursor;
+            } else {
+              this.canNext = false;
+            }
           } else {
             this.canNext = false;
           }
