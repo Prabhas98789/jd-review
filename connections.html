@@ -10,7 +10,8 @@
 <body x-data="connectionsPage()" x-init="init()" class="min-h-screen bg-gray-100 p-6">
   <div class="flex justify-between items-center mb-4">
     <h1 class="text-2xl font-bold">Connections</h1>
-    <div>
+    <div class="flex space-x-2">
+      <input x-model="search" type="text" placeholder="Search name or headline..." class="px-3 py-2 border rounded" />
       <button @click="refreshConnections" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">🔄 Refresh</button>
     </div>
   </div>
@@ -19,23 +20,25 @@
     <div class="text-blue-600">Loading connections...</div>
   </template>
 
-  <template x-if="!loading && paginatedConnections.length">
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      <template x-for="conn in paginatedConnections" :key="conn.member_id">
-        <div class="bg-white p-4 rounded shadow">
-          <div class="flex items-center space-x-4">
-            <img :src="conn.profile_picture_url" alt="Profile" class="w-16 h-16 rounded-full object-cover border" />
-            <div>
-              <a :href="conn.public_profile_url" target="_blank" class="text-lg font-semibold text-blue-700 hover:underline" x-text="conn.name"></a>
-              <p class="text-sm text-gray-600" x-text="conn.headline"></p>
-            </div>
+  <template x-if="!loading && filteredConnections.length">
+    <div class="space-y-2">
+      <template x-for="conn in paginatedFilteredConnections" :key="conn.member_id">
+        <div class="bg-white p-3 rounded shadow flex items-center space-x-4">
+          <img :src="conn.profile_picture_url" alt="Profile" class="w-12 h-12 rounded-full object-cover border" />
+          <div class="flex-1">
+            <a :href="conn.public_profile_url" target="_blank" class="text-base font-semibold text-blue-700 hover:underline" x-text="conn.name"></a>
+            <p class="text-sm text-gray-600" x-text="conn.headline"></p>
+          </div>
+          <div class="flex space-x-2">
+            <button class="px-3 py-1 bg-green-500 text-white text-sm rounded hover:bg-green-600">💬 Message</button>
+            <button class="px-3 py-1 bg-purple-500 text-white text-sm rounded hover:bg-purple-600">➕ Add to Sequence</button>
           </div>
         </div>
       </template>
     </div>
   </template>
 
-  <template x-if="!loading && !paginatedConnections.length">
+  <template x-if="!loading && !filteredConnections.length">
     <div class="text-gray-500">No connections found.</div>
   </template>
 
@@ -55,10 +58,20 @@
         cursor: null,
         canNext: true,
         canPrev: false,
+        search: '',
 
-        get paginatedConnections() {
+        get filteredConnections() {
+          if (!this.search.trim()) return this.connections;
+          const s = this.search.toLowerCase();
+          return this.connections.filter(c =>
+            (c.name && c.name.toLowerCase().includes(s)) ||
+            (c.headline && c.headline.toLowerCase().includes(s))
+          );
+        },
+
+        get paginatedFilteredConnections() {
           const start = this.pageIndex * this.pageSize;
-          return this.connections.slice(start, start + this.pageSize);
+          return this.filteredConnections.slice(start, start + this.pageSize);
         },
 
         async init() {
@@ -132,10 +145,10 @@
         async loadNextPage() {
           const nextPageStart = (this.pageIndex + 1) * this.pageSize;
 
-          if (nextPageStart < this.connections.length) {
+          if (nextPageStart < this.filteredConnections.length) {
             this.pageIndex++;
             this.canPrev = this.pageIndex > 0;
-            this.canNext = this.connections.length > (this.pageIndex + 1) * this.pageSize || !!this.cursor;
+            this.canNext = this.filteredConnections.length > (this.pageIndex + 1) * this.pageSize || !!this.cursor;
           } else if (this.cursor) {
             await this.fetchExtendedConnections();
           } else {
@@ -147,7 +160,7 @@
           if (this.pageIndex > 0) {
             this.pageIndex--;
             this.canPrev = this.pageIndex > 0;
-            this.canNext = this.connections.length > (this.pageIndex + 1) * this.pageSize || !!this.cursor;
+            this.canNext = this.filteredConnections.length > (this.pageIndex + 1) * this.pageSize || !!this.cursor;
           }
         }
       }
