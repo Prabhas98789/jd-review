@@ -72,7 +72,7 @@
             if (newConnections.length > 0) {
               this.connections = newConnections;
               this.cursor = data.next_cursor || null;
-              this.canNext = !!this.cursor;
+              this.canNext = !!this.cursor || newConnections.length === 50;
             } else {
               await this.fetchFromRefreshWebhook();
             }
@@ -92,9 +92,10 @@
               body: JSON.stringify({ account_id: this.account_id, cursor: this.cursor })
             });
             const data = await res.json();
-            this.connections = Array.isArray(data) ? data : (data.connections || []);
+            const refreshed = Array.isArray(data) ? data : (data.connections || []);
+            this.connections = refreshed;
             this.cursor = data.next_cursor || null;
-            this.canNext = !!this.cursor;
+            this.canNext = !!this.cursor || refreshed.length === 50;
           } catch (err) {
             alert("Failed to refresh from fallback webhook");
             console.error(err);
@@ -120,6 +121,7 @@
         },
 
         async loadNextPage() {
+          if (!this.canNext) return;
           await this.fetchConnections();
         },
 
