@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en" class="bg-gray-100">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LinkedIn Connections</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+</head>
+<body x-data="connectionsPage()" x-init="init()" class="min-h-screen p-6">
+  <div class="max-w-6xl mx-auto">
+    <div class="flex justify-between items-center mb-6">
+      <h1 class="text-3xl font-bold text-gray-800">Connections</h1>
+      <div class="space-x-4">
+        <button @click="refreshConnections" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">🔄 Refresh</button>
+        <button @click="prevPage" :disabled="!prevCursor" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400 disabled:opacity-50">⬅ Prev</button>
+        <button @click="nextPage" :disabled="!nextCursor" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400 disabled:opacity-50">Next ➡</button>
+      </div>
+    </div>
+
+    <template x-if="loading">
+      <div class="text-blue-600">Loading connections...</div>
+    </template>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" x-show="!loading">
+      <template x-for="conn in connections" :key="conn.connection_id">
+        <div class="bg-white p-4 rounded shadow flex items-center space-x-4">
+          <img :src="conn.profile_picture_url" class="w-16 h-16 rounded-full object-cover border" alt="Profile Picture">
+          <div>
+            <h3 class="text-lg font-semibold" x-text="conn.name"></h3>
+            <p class="text-sm text-gray-600" x-text="conn.headline"></p>
+            <p class="text-xs text-gray-400" x-text="conn.location"></p>
+          </div>
+        </div>
+      </template>
+    </div>
+  </div>
+
+  <script>
+    function connectionsPage() {
+      return {
+        connections: [],
+        loading: false,
+        nextCursor: null,
+        prevCursor: null,
+        account_id: null,
+
+        init() {
+          const params = new URLSearchParams(window.location.search);
+          this.account_id = params.get('uid');
+          if (!this.account_id) return alert("Missing account ID");
+          this.fetchConnections();
+        },
+
+        async fetchConnections(cursor = null) {
+          this.loading = true;
+          try {
+            const res = await fetch("https://n8n.sapidblue.in/webhook/9989b633-8e27-4310-a341-55afc04bf4c8", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ account_id: this.account_id, cursor })
+            });
+            const data = await res.json();
+            this.connections = data.connections || [];
+            this.nextCursor = data.next_cursor || null;
+            this.prevCursor = data.prev_cursor || null;
+          } catch (err) {
+            alert("Error loading connections");
+            console.error(err);
+          } finally {
+            this.loading = false;
+          }
+        },
+
+        async refreshConnections() {
+          this.loading = true;
+          try {
+            const res = await fetch("https://n8n.sapidblue.in/webhook/db73d44e-dc5f-4270-ab98-4426839decd4", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ account_id: this.account_id })
+            });
+            const data = await res.json();
+            this.connections = data.connections || [];
+            this.nextCursor = data.next_cursor || null;
+            this.prevCursor = null; // reset
+          } catch (err) {
+            alert("Error refreshing connections");
+            console.error(err);
+          } finally {
+            this.loading = false;
+          }
+        },
+
+        nextPage() { if (this.nextCursor) this.fetchConnections(this.nextCursor); },
+        prevPage() { if (this.prevCursor) this.fetchConnections(this.prevCursor); }
+      }
+    }
+  </script>
+</body>
+</html>
