@@ -45,7 +45,7 @@
         <div class="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4">
           <a :href="`connections.html?uid=${profile?.account_id}`" class="bg-white p-4 rounded shadow hover:bg-blue-50 cursor-pointer">
             <h3 class="font-bold text-lg">Connections</h3>
-            <p class="text-2xl text-blue-700 font-semibold" x-text="profile.connection_count || 0"></p>
+            <p class="text-2xl text-blue-700 font-semibold" x-text="profile.total_connections || 0"></p>
           </a>
           <a :href="`invitations.html?uid=${profile?.account_id}`" class="bg-white p-4 rounded shadow hover:bg-blue-50 cursor-pointer">
             <h3 class="font-bold text-lg">Invitations Sent</h3>
