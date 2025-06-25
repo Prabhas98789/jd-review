@@ -53,29 +53,24 @@
           <option value="filtered">2nd-Degree (Filtered)</option>
         </select>
 
-        <!-- Connected type -->
         <template x-if="newSequence.type === 'connected'">
           <div>
-            <label class="block text-sm font-medium mb-1">Connection Source</label>
-            <select x-model="newSequence.connected_mode" class="w-full border px-3 py-2 rounded mb-4">
-              <option value="url">Manual URL Input</option>
-              <option value="filter">Select by Filter</option>
+            <label class="block text-sm font-medium mb-1">Target Source</label>
+            <select x-model="newSequence.connected_target_source" class="w-full border px-3 py-2 rounded mb-4">
+              <option value="filters">Filter Connections</option>
+              <option value="url">LinkedIn URLs</option>
             </select>
 
-            <template x-if="newSequence.connected_mode === 'url'">
+            <template x-if="newSequence.connected_target_source === 'filters'">
               <div>
-                <label class="block text-sm font-medium mb-1">Paste LinkedIn URLs</label>
-                <textarea x-model="newSequence.connected_targets" class="w-full border px-3 py-2 rounded mb-4" placeholder="Comma-separated LinkedIn profile URLs or IDs"></textarea>
+                <input x-model="newSequence.filters.location" type="text" class="w-full border px-3 py-2 rounded mb-2" placeholder="Location" />
+                <input x-model="newSequence.filters.industry" type="text" class="w-full border px-3 py-2 rounded mb-2" placeholder="Industry" />
+                <input x-model="newSequence.filters.title" type="text" class="w-full border px-3 py-2 rounded mb-2" placeholder="Title" />
               </div>
             </template>
 
-            <template x-if="newSequence.connected_mode === 'filter'">
-              <div>
-                <label class="block text-sm font-medium mb-1">Connection Filters</label>
-                <input x-model="newSequence.connection_filters.location" type="text" class="w-full border px-3 py-2 rounded mb-2" placeholder="Location" />
-                <input x-model="newSequence.connection_filters.industry" type="text" class="w-full border px-3 py-2 rounded mb-2" placeholder="Industry" />
-                <input x-model="newSequence.connection_filters.title" type="text" class="w-full border px-3 py-2 rounded mb-2" placeholder="Title" />
-              </div>
+            <template x-if="newSequence.connected_target_source === 'url'">
+              <textarea x-model="newSequence.connected_targets" class="w-full border px-3 py-2 rounded mb-2" placeholder="Comma-separated LinkedIn profile URLs or IDs"></textarea>
             </template>
 
             <label class="block text-sm font-medium mt-4 mb-1">Interaction</label>
@@ -87,7 +82,6 @@
           </div>
         </template>
 
-        <!-- Filtered type -->
         <template x-if="newSequence.type === 'filtered'">
           <div>
             <label class="block text-sm font-medium mb-1">Filter Criteria</label>
@@ -136,14 +130,9 @@
         newSequence: {
           name: '',
           type: 'connected',
-          connected_mode: 'url',
-          connected_targets: '',
-          connection_filters: {
-            location: '',
-            industry: '',
-            title: ''
-          },
+          connected_target_source: 'filters',
           steps: [],
+          connected_targets: '',
           filters: {
             location: '',
             industry: '',
@@ -182,52 +171,47 @@
         },
 
         async createSequence() {
-  try {
-    const payload = {
-      account_id: this.account_id,
-      name: this.newSequence.name,
-      type: this.newSequence.type,
-      steps: this.newSequence.steps,
-      interaction: this.newSequence.interaction
-    };
+          try {
+            const payload = {
+              account_id: this.account_id,
+              name: this.newSequence.name,
+              type: this.newSequence.type,
+              steps: this.newSequence.steps,
+              interaction: this.newSequence.interaction
+            };
 
-    if (this.newSequence.type === 'connected') {
-      if (this.newSequence.connected_target_source === 'url') {
-        payload.connected_targets = this.newSequence.connected_targets;
-      } else if (this.newSequence.connected_target_source === 'filters') {
-        payload.filters = this.newSequence.filters;
-      }
-    } else if (this.newSequence.type === 'filtered') {
-      payload.filters = this.newSequence.filters;
-    }
+            if (this.newSequence.type === 'connected') {
+              if (this.newSequence.connected_target_source === 'url') {
+                payload.connected_targets = this.newSequence.connected_targets;
+              } else if (this.newSequence.connected_target_source === 'filters') {
+                payload.filters = this.newSequence.filters;
+              }
+            } else if (this.newSequence.type === 'filtered') {
+              payload.filters = this.newSequence.filters;
+            }
 
-    const res = await fetch('https://n8n.sapidblue.in/webhook/ee88a185-6867-4edb-863a-fed408b01feb', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
+            const res = await fetch('https://n8n.sapidblue.in/webhook/ee88a185-6867-4edb-863a-fed408b01feb', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload)
+            });
 
-    const created = await res.json();
-    this.sequences.push(created);
-    this.resetNewSequence();
-  } catch (err) {
-    console.error("Failed to create sequence", err);
-    alert("Failed to create sequence");
-  }
-},
+            const created = await res.json();
+            this.sequences.push(created);
+            this.resetNewSequence();
+          } catch (err) {
+            console.error("Failed to create sequence", err);
+            alert("Failed to create sequence");
+          }
+        },
 
         resetNewSequence() {
           this.newSequence = {
             name: '',
             type: 'connected',
-            connected_mode: 'url',
-            connected_targets: '',
-            connection_filters: {
-              location: '',
-              industry: '',
-              title: ''
-            },
+            connected_target_source: 'filters',
             steps: [],
+            connected_targets: '',
             filters: {
               location: '',
               industry: '',
