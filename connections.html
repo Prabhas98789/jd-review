@@ -74,7 +74,7 @@
               this.cursor = data.next_cursor || null;
               this.canNext = !!this.cursor || newConnections.length === 50;
             } else {
-              await this.fetchFromRefreshWebhook();
+              await this.fetchExtendedConnections();
             }
           } catch (err) {
             alert("Failed to fetch connections");
@@ -84,20 +84,20 @@
           }
         },
 
-        async fetchFromRefreshWebhook() {
+        async fetchExtendedConnections() {
           try {
-            const res = await fetch('https://n8n.sapidblue.in/webhook/db73d44e-dc5f-4270-ab98-4426839decd4', {
+            const res = await fetch('https://n8n.sapidblue.in/webhook/de777887-fcae-46d0-a756-6763455215ea', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ account_id: this.account_id, cursor: this.cursor })
             });
             const data = await res.json();
-            const refreshed = Array.isArray(data) ? data : (data.connections || []);
-            this.connections = refreshed;
+            const extended = Array.isArray(data) ? data : (data.connections || []);
+            this.connections = extended;
             this.cursor = data.next_cursor || null;
-            this.canNext = !!this.cursor || refreshed.length === 50;
+            this.canNext = !!this.cursor;
           } catch (err) {
-            alert("Failed to refresh from fallback webhook");
+            alert("Failed to load extended connections");
             console.error(err);
           }
         },
