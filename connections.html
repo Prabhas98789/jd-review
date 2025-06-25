@@ -128,24 +128,25 @@
         },
 
         async loadNextPage() {
-          const nextPageStart = (this.pageIndex + 1) * this.pageSize;
-          if (nextPageStart < this.connections.length) {
-            this.pageIndex++;
-            this.canPrev = this.pageIndex > 0;
-            this.canNext = this.connections.length > (this.pageIndex + 1) * this.pageSize || !!this.cursor;
-          } else if (this.cursor) {
-            await this.fetchExtendedConnections();
-            if (this.connections.length > nextPageStart) {
+        const nextPageStart = (this.pageIndex + 1) * this.pageSize;
+      
+        if (nextPageStart < this.connections.length) {
+          this.pageIndex++;
+              this.canPrev = this.pageIndex > 0;
+              this.canNext = this.connections.length > (this.pageIndex + 1) * this.pageSize || !!this.cursor;
+        } else if (this.pageIndex * this.pageSize >= this.connections.length && this.cursor) {
+          await this.fetchExtendedConnections();
+          if (this.connections.length > nextPageStart) {
               this.pageIndex++;
               this.canPrev = this.pageIndex > 0;
               this.canNext = this.connections.length > (this.pageIndex + 1) * this.pageSize || !!this.cursor;
-            } else {
-              this.canNext = false;
-            }
           } else {
-            this.canNext = false;
+              this.canNext = !!this.cursor;
           }
-        },
+        } else {
+            this.canNext = false;
+        }
+      },
 
         loadPrevPage() {
           if (this.pageIndex > 0) {
