@@ -56,16 +56,27 @@
         <!-- Connected type -->
         <template x-if="newSequence.type === 'connected'">
           <div>
-            <label class="block text-sm font-medium mb-1">Select from Connections</label>
-            <select multiple class="w-full border px-3 py-2 rounded h-40 overflow-y-auto" x-model="selectedConnections">
-              <template x-for="conn in connections" :key="conn.member_id">
-                <option :value="conn.member_id" x-text="conn.first_name + ' ' + conn.last_name + ' - ' + conn.headline"></option>
-              </template>
+            <label class="block text-sm font-medium mb-1">Connection Source</label>
+            <select x-model="newSequence.connected_mode" class="w-full border px-3 py-2 rounded mb-4">
+              <option value="url">Manual URL Input</option>
+              <option value="filter">Select by Filter</option>
             </select>
 
-            <label class="block text-sm font-medium mt-4 mb-1">Paste LinkedIn URLs (Optional)</label>
-            <textarea x-model="newSequence.connected_targets" class="w-full border px-3 py-2 rounded mb-2" placeholder="Comma-separated LinkedIn profile URLs or IDs"></textarea>
-            <small class="text-gray-500">You can use both selections and manual URLs</small>
+            <template x-if="newSequence.connected_mode === 'url'">
+              <div>
+                <label class="block text-sm font-medium mb-1">Paste LinkedIn URLs</label>
+                <textarea x-model="newSequence.connected_targets" class="w-full border px-3 py-2 rounded mb-4" placeholder="Comma-separated LinkedIn profile URLs or IDs"></textarea>
+              </div>
+            </template>
+
+            <template x-if="newSequence.connected_mode === 'filter'">
+              <div>
+                <label class="block text-sm font-medium mb-1">Connection Filters</label>
+                <input x-model="newSequence.connection_filters.location" type="text" class="w-full border px-3 py-2 rounded mb-2" placeholder="Location" />
+                <input x-model="newSequence.connection_filters.industry" type="text" class="w-full border px-3 py-2 rounded mb-2" placeholder="Industry" />
+                <input x-model="newSequence.connection_filters.title" type="text" class="w-full border px-3 py-2 rounded mb-2" placeholder="Title" />
+              </div>
+            </template>
 
             <label class="block text-sm font-medium mt-4 mb-1">Interaction</label>
             <div class="flex items-center space-x-2 mb-4">
@@ -120,15 +131,19 @@
       return {
         account_id: new URLSearchParams(window.location.search).get('uid'),
         sequences: [],
-        connections: [],
-        selectedConnections: [],
         loading: false,
         showNewSequenceModal: false,
         newSequence: {
           name: '',
           type: 'connected',
-          steps: [],
+          connected_mode: 'url',
           connected_targets: '',
+          connection_filters: {
+            location: '',
+            industry: '',
+            title: ''
+          },
+          steps: [],
           filters: {
             location: '',
             industry: '',
@@ -147,7 +162,6 @@
         async init() {
           if (!this.account_id) return alert("Missing account ID");
           await this.fetchSequences();
-          await this.fetchConnections();
         },
 
         async fetchSequences() {
@@ -167,20 +181,6 @@
           }
         },
 
-        async fetchConnections() {
-          try {
-            const res = await fetch('https://n8n.sapidblue.in/webhook/9989b633-8e27-4310-a341-55afc04bf4c8', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ account_id: this.account_id })
-            });
-            const data = await res.json();
-            this.connections = Array.isArray(data) ? data : [];
-          } catch (err) {
-            console.error("Failed to load connections", err);
-          }
-        },
-
         async createSequence() {
           try {
             const res = await fetch('https://n8n.sapidblue.in/webhook/ee88a185-6867-4edb-863a-fed408b01feb', {
@@ -188,8 +188,7 @@
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 account_id: this.account_id,
-                ...this.newSequence,
-                selected_member_ids: this.selectedConnections
+                ...this.newSequence
               })
             });
             const created = await res.json();
@@ -204,8 +203,14 @@
           this.newSequence = {
             name: '',
             type: 'connected',
-            steps: [],
+            connected_mode: 'url',
             connected_targets: '',
+            connection_filters: {
+              location: '',
+              industry: '',
+              title: ''
+            },
+            steps: [],
             filters: {
               location: '',
               industry: '',
@@ -220,7 +225,6 @@
               comment: ''
             }
           };
-          this.selectedConnections = [];
           this.showNewSequenceModal = false;
         },
 
