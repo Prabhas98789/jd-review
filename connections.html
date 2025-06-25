@@ -7,65 +7,68 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
-<body x-data="connectionsPage()" x-init="init()" class="min-h-screen p-6">
-  <div class="max-w-6xl mx-auto">
-    <div class="flex justify-between items-center mb-6">
-      <h1 class="text-3xl font-bold text-gray-800">Connections</h1>
-      <div class="space-x-4">
-        <button @click="refreshConnections" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">🔄 Refresh</button>
-        <button @click="prevPage" :disabled="!prevCursor" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400 disabled:opacity-50">⬅ Prev</button>
-        <button @click="nextPage" :disabled="!nextCursor" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400 disabled:opacity-50">Next ➡</button>
-      </div>
+<body x-data="connectionsPage()" x-init="init()" class="min-h-screen bg-gray-100 p-6">
+  <div class="flex justify-between items-center mb-4">
+    <h1 class="text-2xl font-bold">Connections</h1>
+    <div>
+      <button @click="refreshConnections" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">🔄 Refresh</button>
     </div>
+  </div>
 
-    <template x-if="loading">
-      <div class="text-blue-600">Loading connections...</div>
-    </template>
+  <template x-if="loading">
+    <div class="text-blue-600">Loading connections...</div>
+  </template>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" x-show="!loading">
-      <template x-for="conn in connections" :key="conn.connection_id">
-        <div class="bg-white p-4 rounded shadow flex items-center space-x-4">
-          <img :src="conn.profile_picture_url" class="w-16 h-16 rounded-full object-cover border" alt="Profile Picture">
-          <div>
-            <h3 class="text-lg font-semibold" x-text="conn.name"></h3>
-            <p class="text-sm text-gray-600" x-text="conn.headline"></p>
-            <p class="text-xs text-gray-400" x-text="conn.location"></p>
+  <template x-if="!loading && connections.length">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <template x-for="conn in connections" :key="conn.member_id">
+        <div class="bg-white p-4 rounded shadow">
+          <div class="flex items-center space-x-4">
+            <img :src="conn.profile_picture_url" alt="Profile" class="w-16 h-16 rounded-full object-cover border" />
+            <div>
+              <a :href="conn.public_profile_url" target="_blank" class="text-lg font-semibold text-blue-700 hover:underline" x-text="conn.name"></a>
+              <p class="text-sm text-gray-600" x-text="conn.headline"></p>
+            </div>
           </div>
         </div>
       </template>
     </div>
+  </template>
+
+  <div class="mt-6 flex justify-center space-x-2">
+    <button @click="loadPrevPage" :disabled="!canPrev" class="px-3 py-1 bg-gray-300 rounded hover:bg-gray-400 disabled:opacity-50">Prev</button>
+    <button @click="loadNextPage" :disabled="!canNext" class="px-3 py-1 bg-gray-300 rounded hover:bg-gray-400 disabled:opacity-50">Next</button>
   </div>
 
   <script>
     function connectionsPage() {
       return {
+        account_id: new URLSearchParams(window.location.search).get('uid'),
         connections: [],
         loading: false,
-        nextCursor: null,
-        prevCursor: null,
-        account_id: null,
+        cursor: null,
+        canNext: true,
+        canPrev: false,
 
-        init() {
-          const params = new URLSearchParams(window.location.search);
-          this.account_id = params.get('uid');
+        async init() {
           if (!this.account_id) return alert("Missing account ID");
-          this.fetchConnections();
+          await this.fetchConnections();
         },
 
-        async fetchConnections(cursor = null) {
+        async fetchConnections() {
           this.loading = true;
           try {
-            const res = await fetch("https://n8n.sapidblue.in/webhook/9989b633-8e27-4310-a341-55afc04bf4c8", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ account_id: this.account_id, cursor })
+            const res = await fetch('https://n8n.sapidblue.in/webhook/9989b633-8e27-4310-a341-55afc04bf4c8', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ account_id: this.account_id, cursor: this.cursor })
             });
             const data = await res.json();
             this.connections = data.connections || [];
-            this.nextCursor = data.next_cursor || null;
-            this.prevCursor = data.prev_cursor || null;
+            this.cursor = data.next_cursor || null;
+            this.canNext = !!this.cursor;
           } catch (err) {
-            alert("Error loading connections");
+            alert("Failed to fetch connections");
             console.error(err);
           } finally {
             this.loading = false;
@@ -75,25 +78,28 @@
         async refreshConnections() {
           this.loading = true;
           try {
-            const res = await fetch("https://n8n.sapidblue.in/webhook/db73d44e-dc5f-4270-ab98-4426839decd4", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
+            const res = await fetch('https://n8n.sapidblue.in/webhook/db73d44e-dc5f-4270-ab98-4426839decd4', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ account_id: this.account_id })
             });
-            const data = await res.json();
-            this.connections = data.connections || [];
-            this.nextCursor = data.next_cursor || null;
-            this.prevCursor = null; // reset
+            await this.fetchConnections();
           } catch (err) {
-            alert("Error refreshing connections");
+            alert("Failed to refresh connections");
             console.error(err);
           } finally {
             this.loading = false;
           }
         },
 
-        nextPage() { if (this.nextCursor) this.fetchConnections(this.nextCursor); },
-        prevPage() { if (this.prevCursor) this.fetchConnections(this.prevCursor); }
+        async loadNextPage() {
+          await this.fetchConnections();
+        },
+
+        loadPrevPage() {
+          // Optional: Maintain previous cursors stack if needed
+          alert('Previous page not implemented');
+        }
       }
     }
   </script>
