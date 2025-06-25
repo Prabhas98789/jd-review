@@ -35,6 +35,10 @@
     </div>
   </template>
 
+  <template x-if="!loading && !connections.length">
+    <div class="text-gray-500">No connections found.</div>
+  </template>
+
   <div class="mt-6 flex justify-center space-x-2">
     <button @click="loadPrevPage" :disabled="!canPrev" class="px-3 py-1 bg-gray-300 rounded hover:bg-gray-400 disabled:opacity-50">Prev</button>
     <button @click="loadNextPage" :disabled="!canNext" class="px-3 py-1 bg-gray-300 rounded hover:bg-gray-400 disabled:opacity-50">Next</button>
@@ -64,7 +68,7 @@
               body: JSON.stringify({ account_id: this.account_id, cursor: this.cursor })
             });
             const data = await res.json();
-            this.connections = data.connections || [];
+            this.connections = Array.isArray(data) ? data : (data.connections || []);
             this.cursor = data.next_cursor || null;
             this.canNext = !!this.cursor;
           } catch (err) {
@@ -78,7 +82,7 @@
         async refreshConnections() {
           this.loading = true;
           try {
-            const res = await fetch('https://n8n.sapidblue.in/webhook/db73d44e-dc5f-4270-ab98-4426839decd4', {
+            await fetch('https://n8n.sapidblue.in/webhook/db73d44e-dc5f-4270-ab98-4426839decd4', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ account_id: this.account_id })
@@ -97,7 +101,6 @@
         },
 
         loadPrevPage() {
-          // Optional: Maintain previous cursors stack if needed
           alert('Previous page not implemented');
         }
       }
