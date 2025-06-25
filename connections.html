@@ -73,7 +73,7 @@
 
             if (newConnections.length > this.connections.length) {
               this.connections = newConnections.slice(this.connections.length);
-              this.cursor = data.next_cursor || null;
+              this.cursor = data.next_cursor || (newConnections.length ? newConnections[newConnections.length - 1].cursor : null);
               this.canNext = !!this.cursor;
             } else {
               await this.fetchExtendedConnections();
@@ -97,7 +97,7 @@
             const extended = Array.isArray(data) ? data : (data.connections || []);
             if (extended.length > this.connections.length) {
               this.connections = extended.slice(this.connections.length);
-              this.cursor = data.next_cursor || null;
+              this.cursor = data.next_cursor || (extended.length ? extended[extended.length - 1].cursor : null);
               this.canNext = !!this.cursor;
             } else {
               this.canNext = false;
