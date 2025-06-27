@@ -42,8 +42,13 @@
     <div class="text-gray-500">No connections found.</div>
   </template>
 
-  <div class="mt-6 flex justify-center space-x-2">
+  <!-- Pagination Controls -->
+  <div class="mt-6 flex justify-center items-center space-x-4">
     <button @click="loadPrevPage" :disabled="!canPrev" class="px-3 py-1 bg-gray-300 rounded hover:bg-gray-400 disabled:opacity-50">Prev</button>
+    
+    <!-- Page Counter -->
+    <span class="text-gray-700 font-medium" x-text="`Page ${pageIndex + 1} of ${totalPages}`"></span>
+    
     <button @click="loadNextPage" :disabled="!canNext" class="px-3 py-1 bg-gray-300 rounded hover:bg-gray-400 disabled:opacity-50">Next</button>
   </div>
 
@@ -72,6 +77,10 @@
         get paginatedFilteredConnections() {
           const start = this.pageIndex * this.pageSize;
           return this.filteredConnections.slice(start, start + this.pageSize);
+        },
+
+        get totalPages() {
+          return Math.ceil(this.filteredConnections.length / this.pageSize) || 1;
         },
 
         async init() {
@@ -144,7 +153,6 @@
 
         async loadNextPage() {
           const nextPageStart = (this.pageIndex + 1) * this.pageSize;
-
           if (nextPageStart < this.filteredConnections.length) {
             this.pageIndex++;
             this.canPrev = this.pageIndex > 0;
