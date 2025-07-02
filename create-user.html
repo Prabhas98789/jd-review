@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Create Account</title>
+  <title>Sign Up</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 </head>
@@ -45,27 +45,22 @@
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const formData = new FormData(form);
-      const plainPassword = formData.get("password");
-      const hashedPassword = CryptoJS.SHA256(plainPassword).toString();
-
-      const data = {
-        name: formData.get("name"),
-        email: formData.get("email"),
-        password_hash: hashedPassword
-      };
+      const data = Object.fromEntries(new FormData(form).entries());
+      data.password_hash = CryptoJS.SHA256(data.password).toString();
+      delete data.password;
 
       const response = await fetch("https://n8n.sapidblue.in/webhook/form-add-user", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data)
+        body: JSON.stringify(data),
       });
 
       const result = await response.json();
-      if (result[0].success) {
-        window.location.href = `login.html?email=${encodeURIComponent(data.email)}&password=${encodeURIComponent(plainPassword)}`;
+      if (result[0]?.success) {
+        // Redirect to login with prefilled data
+        window.location.href = `login.html?email=${encodeURIComponent(data.email)}`;
       } else {
-        msg.textContent = result[0].error || "Something went wrong!";
+        msg.textContent = result[0]?.error || "Something went wrong.";
         msg.classList.remove("hidden");
         msg.classList.add("text-red-600");
       }
