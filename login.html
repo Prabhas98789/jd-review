@@ -50,33 +50,39 @@
       password_hash: hashedPassword
     };
 
-    const response = await fetch("https://n8n.sapidblue.in/webhook/user-login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data)
-    });
+    try {
+      const response = await fetch("https://n8n.sapidblue.in/webhook/user-login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+      });
 
-    const result = await response.json();
+      const result = await response.json();
 
-    if (result.Login === "Successfull") {
-      msg.textContent = "✅ Login successful!";
-      msg.classList.remove("hidden");
-      msg.classList.add("text-green-600");
+      if (result.Login === "Successfull") {
+        msg.textContent = "✅ Login successful!";
+        msg.classList.remove("hidden");
+        msg.classList.remove("text-red-600");
+        msg.classList.add("text-green-600");
 
-      // Store email to indicate user is logged in
-      localStorage.setItem("user_email", data.email);
+        localStorage.setItem("user_email", data.email);
 
-      // Redirect to dashboard or any page
-      setTimeout(() => {
-        window.location.href = "dashboard.html";
-      }, 1000);
+        // Redirect to select-site.html (or dashboard.html if preferred)
+        setTimeout(() => {
+          window.location.href = "select-site.html";
+        }, 1000);
+      } else {
+        msg.textContent = result.error || "❌ Login failed.";
+        msg.classList.remove("hidden");
+        msg.classList.remove("text-green-600");
+        msg.classList.add("text-red-600");
 
-    } else {
-      msg.textContent = result.error || "❌ Login failed.";
+        localStorage.removeItem("user_email");
+      }
+    } catch (err) {
+      msg.textContent = "❌ Server error. Please try again.";
       msg.classList.remove("hidden");
       msg.classList.add("text-red-600");
-
-      // Clear stored login if any
       localStorage.removeItem("user_email");
     }
   });
