@@ -30,6 +30,14 @@
   </div>
 
   <script>
+    // ✅ Auto-fill form from query string if coming from signup
+    const urlParams = new URLSearchParams(window.location.search);
+    const emailParam = urlParams.get("email");
+    const passwordParam = urlParams.get("password");
+
+    if (emailParam) document.querySelector('input[name="email"]').value = emailParam;
+    if (passwordParam) document.querySelector('input[name="password"]').value = passwordParam;
+
     const loginForm = document.getElementById('loginForm');
     const msg = document.getElementById('msg');
 
@@ -55,7 +63,8 @@
         msg.textContent = "✅ Login successful!";
         msg.classList.remove("hidden");
         msg.classList.add("text-green-600");
-        // You can redirect here:
+
+        // 🔁 Optional: Redirect to dashboard or main panel
         // window.location.href = `/dashboard.html?user_id=${result.user_id}`;
       } else {
         msg.textContent = result.message || "❌ Invalid credentials.";
