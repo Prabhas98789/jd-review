@@ -32,15 +32,18 @@
             </p>
           </div>
           <div class="flex space-x-2">
-            <template x-if="(seq.status || 'loading') === 'loading'">
-              <button @click="runSequence(seq)" class="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700">▶️ Run</button>
+            <template x-if="seq.status === 'load...'">
+            <button @click="runSequence(seq)" class="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700">▶️ Run</button>
+          </template>
+
+          <template x-if="seq.status === 'running'">
+            <span class="text-sm px-3 py-1 bg-yellow-100 text-yellow-800 rounded">⏳ Running</span>
             </template>
-            <template x-if="seq.status === 'running'">
-              <span class="text-sm px-3 py-1 bg-yellow-100 text-yellow-800 rounded">⏳ Running</span>
-            </template>
-            <button @click="editSequence(seq)" class="px-3 py-1 bg-yellow-500 text-white text-sm rounded hover:bg-yellow-600">✏️ Edit</button>
-            <button @click="deleteSequence(seq.id)" class="px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700">🗑️ Delete</button>
-          </div>
+
+          <button @click="editSequence(seq)" class="px-3 py-1 bg-yellow-500 text-white text-sm rounded hover:bg-yellow-600">✏️ Edit</button>
+          <button @click="deleteSequence(seq.id)" class="px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700">🗑️ Delete</button>
+    
+
         </div>
       </template>
     </div>
