@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-gray-100 p-8">
+  <script>
+    const email = localStorage.getItem("user_email");
+    if (!email) {
+      window.location.href = "login.html";
+    }
+  </script>
+
+  <h1 class="text-3xl font-bold text-blue-700">Welcome to Your Dashboard</h1>
+  <p class="mt-2">Logged in as: <span id="emailDisplay" class="font-mono"></span></p>
+
+  <button onclick="logout()" class="mt-4 bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">Logout</button>
+
+  <script>
+    document.getElementById("emailDisplay").textContent = localStorage.getItem("user_email");
+
+    function logout() {
+      localStorage.removeItem("user_email");
+      window.location.href = "login.html";
+    }
+  </script>
+</body>
+</html>
