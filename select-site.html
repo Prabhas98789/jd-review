@@ -3,68 +3,55 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Select WordPress Site</title>
+  <title>Your WordPress Sites</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="min-h-screen flex flex-col items-center justify-center p-6 bg-gradient-to-br from-gray-200 via-white to-gray-100">
+<body class="min-h-screen p-6 bg-gradient-to-br from-gray-100 via-white to-gray-200">
 
-  <div class="w-full max-w-2xl bg-white p-8 rounded-xl shadow-md">
-    <h2 class="text-2xl font-bold text-center text-blue-700 mb-6">Select a WordPress Site</h2>
-    
-    <div id="siteList" class="space-y-4"></div>
+  <script>
+    const userEmail = localStorage.getItem("user_email");
+    if (!userEmail) {
+      window.location.href = "login.html";
+    }
+  </script>
 
-    <div id="noSites" class="hidden text-center text-red-600 font-semibold mt-4">
-      🚫 No sites found. Please <a href="add-account.html" class="text-blue-700 underline">add one</a>.
+  <div class="max-w-3xl mx-auto bg-white shadow-lg rounded-xl p-8">
+    <h1 class="text-2xl font-bold mb-4 text-blue-700">Your WordPress Sites</h1>
+    <div id="sites" class="space-y-4">
+      <p class="text-gray-500">Loading your sites...</p>
+    </div>
+
+    <div class="mt-8 text-center">
+      <a href="add-wp-account.html" class="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700">Add New Site</a>
     </div>
   </div>
 
   <script>
-    const loggedUser = JSON.parse(localStorage.getItem("logged_user") || "null");
-    const siteList = document.getElementById("siteList");
-    const noSites = document.getElementById("noSites");
+    async function fetchSites() {
+      const response = await fetch("https://n8n.sapidblue.in/webhook/fetch-sites", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: localStorage.getItem("user_email") })
+      });
+      const data = await response.json();
+      const sitesContainer = document.getElementById("sites");
+      sitesContainer.innerHTML = "";
 
-    // Redirect to login if user not logged in
-    if (!loggedUser || !loggedUser.id) {
-      window.location.href = "login.html";
-    }
-
-    // Fetch user-specific sites from backend
-    async function loadSites() {
-      const res = await fetch(`https://n8n.sapidblue.in/webhook/get-user-sites?user_id=${loggedUser.id}`);
-      const sites = await res.json();
-
-      if (!Array.isArray(sites) || sites.length === 0) {
-        noSites.classList.remove("hidden");
+      if (data.length === 0) {
+        sitesContainer.innerHTML = "<p>No sites added yet. Please add one.</p>";
         return;
       }
 
-      // Cache sites in localStorage (optional)
-      localStorage.setItem("wp_sites", JSON.stringify(sites));
-
-      sites.forEach(site => {
-        const div = document.createElement("div");
-        div.className = "p-4 border border-gray-300 rounded-lg flex justify-between items-center hover:bg-gray-50 transition";
-
-        const url = document.createElement("span");
-        url.textContent = site.site_url;
-        url.className = "font-semibold";
-
-        const btn = document.createElement("button");
-        btn.textContent = "Select";
-        btn.className = "bg-blue-700 text-white px-4 py-1 rounded-lg hover:bg-blue-800";
-        btn.onclick = () => {
-          localStorage.setItem("selected_wp", JSON.stringify(site));
-          window.location.href = "dashboard.html"; // move to your next step
-        };
-
-        div.appendChild(url);
-        div.appendChild(btn);
-        siteList.appendChild(div);
+      data.forEach(site => {
+        sitesContainer.innerHTML += `
+          <div class="border p-4 rounded-lg shadow-sm bg-gray-50">
+            <div class="font-bold">${site.site_url}</div>
+            <div class="text-sm text-gray-600">${site.niche || 'No niche defined'}</div>
+          </div>`;
       });
     }
 
-    loadSites();
+    fetchSites();
   </script>
-
 </body>
 </html>
