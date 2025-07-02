@@ -27,10 +27,14 @@
     </form>
 
     <div id="msg" class="text-center mt-4 font-semibold hidden"></div>
+
+    <p class="text-center mt-4 text-sm">
+      Don’t have an account?
+      <a href="create-user.html" class="text-blue-600 font-semibold hover:underline">Sign up here</a>
+    </p>
   </div>
 
   <script>
-    // ✅ Auto-fill form from query string if coming from signup
     const urlParams = new URLSearchParams(window.location.search);
     const emailParam = urlParams.get("email");
     const passwordParam = urlParams.get("password");
@@ -63,8 +67,6 @@
         msg.textContent = "✅ Login successful!";
         msg.classList.remove("hidden");
         msg.classList.add("text-green-600");
-
-        // 🔁 Optional: Redirect to dashboard or main panel
         // window.location.href = `/dashboard.html?user_id=${result.user_id}`;
       } else {
         msg.textContent = result.message || "❌ Invalid credentials.";
