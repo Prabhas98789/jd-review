@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" class="h-full bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white">
+<html lang="en" class="bg-gray-100">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -7,39 +7,37 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
-<body class="h-full min-h-screen p-6 font-sans" x-cloak x-data="dashboard()" x-init="fetchData()">
+<body class="min-h-screen p-6 font-sans text-black" x-cloak x-data="dashboard()" x-init="fetchData()">
   <div class="max-w-7xl mx-auto space-y-6 flex flex-col">
 
     <!-- Back Button -->
     <div>
       <a href="https://prabhas98789.github.io/Job-scraper/repo.html"
          class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg shadow hover:bg-blue-700 transition">
-        ← Back to Dashboard
+        ← Back to Tools Page
       </a>
     </div>
 
     <!-- Header -->
     <div class="flex justify-between items-center">
-      <h1 class="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">LinkedIn Config</h1>
+      <h1 class="text-4xl font-bold text-gray-800">LinkedIn Config</h1>
       <div class="flex gap-3 flex-wrap">
         <button @click="fetchData()" :disabled="loading"
-          class="p-2 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/10 transition disabled:opacity-30">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582M20 20v-5h-.581M5.41 19A9 9 0 113 12.6M21 5a9 9 0 01-2.41 6.4" />
-          </svg>
+          class="p-2 rounded-full bg-blue-100 hover:bg-blue-200 text-blue-800 border border-blue-300 transition disabled:opacity-30">
+          🔄
         </button>
         <button @click="editing = !editing"
           :class="editing ? 'bg-red-600 hover:bg-red-700' : 'bg-yellow-500 hover:bg-yellow-600'"
-          class="px-4 py-2 rounded-full font-medium text-white backdrop-blur shadow transition">
+          class="px-4 py-2 rounded-full font-medium text-white shadow transition">
           <template x-if="!editing">✏️ Edit</template>
           <template x-if="editing">❌ Cancel</template>
         </button>
         <button @click="addUser()" :disabled="!editing"
-          class="px-4 py-2 rounded-full bg-green-600 hover:bg-green-700 text-white backdrop-blur shadow transition disabled:opacity-30">
+          class="px-4 py-2 rounded-full bg-green-600 hover:bg-green-700 text-white shadow transition disabled:opacity-30">
           ➕ Add
         </button>
         <button @click="saveAll()" :disabled="saving || !editing"
-          class="px-4 py-2 rounded-full bg-blue-600 hover:bg-blue-700 text-white backdrop-blur shadow transition disabled:opacity-30">
+          class="px-4 py-2 rounded-full bg-blue-600 hover:bg-blue-700 text-white shadow transition disabled:opacity-30">
           <template x-if="!saving">💾 Save</template>
           <template x-if="saving">⏳ Saving...</template>
         </button>
@@ -47,9 +45,9 @@
     </div>
 
     <!-- Table -->
-    <div class="overflow-x-auto rounded-xl border border-white/10 shadow-xl backdrop-blur-lg bg-white/5">
-      <table class="min-w-full divide-y divide-white/10 text-sm">
-        <thead class="bg-white/10 text-left text-gray-200">
+    <div class="overflow-x-auto rounded-xl border border-gray-300 shadow bg-white">
+      <table class="min-w-full divide-y divide-gray-300 text-sm">
+        <thead class="bg-gray-200 text-left text-gray-700">
           <tr>
             <th class="px-4 py-3">First Name</th>
             <th class="px-4 py-3">Last Name</th>
@@ -63,60 +61,60 @@
             <th class="px-4 py-3">View</th>
           </tr>
         </thead>
-        <tbody class="divide-y divide-white/5">
+        <tbody class="divide-y divide-gray-200 bg-white">
           <template x-for="(user, idx) in users" :key="idx">
-            <tr class="hover:bg-white/10 transition">
+            <tr class="hover:bg-gray-50 transition">
               <td class="px-4 py-2">
                 <input type="text" x-model="user.first_name" :disabled="!editing"
-                  class="w-full bg-transparent border-b border-white/20 px-2 py-1 focus:outline-none" />
+                  class="w-full border-b border-gray-300 px-2 py-1 focus:outline-none bg-transparent" />
               </td>
               <td class="px-4 py-2">
                 <input type="text" x-model="user.last_name" :disabled="!editing"
-                  class="w-full bg-transparent border-b border-white/20 px-2 py-1 focus:outline-none" />
+                  class="w-full border-b border-gray-300 px-2 py-1 focus:outline-none bg-transparent" />
               </td>
               <td class="px-4 py-2">
                 <input type="text" x-model="user.account_id" :disabled="!editing"
-                  class="w-full bg-transparent border-b border-white/20 px-2 py-1 focus:outline-none" />
+                  class="w-full border-b border-gray-300 px-2 py-1 focus:outline-none bg-transparent" />
               </td>
               <td class="px-4 py-2">
-                <select x-model="user.industry" class="w-full bg-transparent border-b border-white/20 px-2 py-1 text-white">
+                <select x-model="user.industry" class="w-full border-b border-gray-300 px-2 py-1 bg-white">
                   <template x-for="opt in industryOptions" :key="opt">
-                    <option :value="opt" x-text="opt" class="bg-gray-900 text-white"></option>
+                    <option :value="opt" x-text="opt"></option>
                   </template>
                 </select>
               </td>
               <td class="px-4 py-2">
-                <select x-model="user.q" class="w-full bg-transparent border-b border-white/20 px-2 py-1 text-white">
+                <select x-model="user.q" class="w-full border-b border-gray-300 px-2 py-1 bg-white">
                   <template x-for="opt in qOptions" :key="opt">
-                    <option :value="opt" x-text="opt" class="bg-gray-900 text-white"></option>
+                    <option :value="opt" x-text="opt"></option>
                   </template>
                 </select>
               </td>
               <td class="px-4 py-2">
-                <select x-model="user.topic_token" class="w-full bg-transparent border-b border-white/20 px-2 py-1 text-white">
+                <select x-model="user.topic_token" class="w-full border-b border-gray-300 px-2 py-1 bg-white">
                   <template x-for="mode in modeOptions" :key="mode">
-                    <option :value="mode" x-text="mode" class="bg-gray-900 text-white"></option>
+                    <option :value="mode" x-text="mode"></option>
                   </template>
                 </select>
               </td>
               <td class="px-4 py-2">
-                <select x-model="user.geography" class="w-full bg-transparent border-b border-white/20 px-2 py-1 text-white">
+                <select x-model="user.geography" class="w-full border-b border-gray-300 px-2 py-1 bg-white">
                   <template x-for="loc in geographyOptions" :key="loc">
-                    <option :value="loc" x-text="loc" class="bg-gray-900 text-white"></option>
+                    <option :value="loc" x-text="loc"></option>
                   </template>
                 </select>
               </td>
               <td class="px-4 py-2 text-center">
                 <input type="checkbox" x-model="user.active" :disabled="!editing"
-                  class="h-5 w-5 text-green-400 bg-transparent border-white/30" />
+                  class="h-5 w-5 text-green-600" />
               </td>
               <td class="px-4 py-2">
                 <input type="time" x-model="user.scheduled_time" :disabled="!editing"
-                  class="w-full bg-transparent border-b border-white/20 px-2 py-1 focus:outline-none" />
+                  class="w-full border-b border-gray-300 px-2 py-1 bg-transparent focus:outline-none" />
               </td>
               <td class="px-4 py-2 text-center">
                 <a :href="`profile.html?uid=${user.account_id}`" target="_blank"
-                  class="text-indigo-400 hover:underline">View</a>
+                  class="text-blue-600 hover:underline">View</a>
               </td>
             </tr>
           </template>
@@ -157,7 +155,13 @@ function dashboard() {
       finally { this.loading = false; }
     },
 
-    addUser() { if (this.editing) this.users.push({ first_name:'', last_name:'', account_id:'', industry:'', q:'', topic_token:'', section_token:'', geography:'', active:false, scheduled_time:'' }); },
+    addUser() {
+      if (this.editing) this.users.push({
+        first_name: '', last_name: '', account_id: '', industry: '',
+        q: '', topic_token: '', section_token: '', geography: '',
+        active: false, scheduled_time: ''
+      });
+    },
 
     async saveAll() {
       this.saving = true;
@@ -168,10 +172,20 @@ function dashboard() {
         active: u.active ? 1 : 0
       }));
       try {
-        const res = await fetch(SAVE_URL, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
-        if (!res.ok) throw new Error(); alert('✅ Saved'); this.editing = false;
-      } catch (e) { console.error(e); alert('Save failed'); }
-      finally { this.saving = false; }
+        const res = await fetch(SAVE_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        if (!res.ok) throw new Error();
+        alert('✅ Saved');
+        this.editing = false;
+      } catch (e) {
+        console.error(e);
+        alert('Save failed');
+      } finally {
+        this.saving = false;
+      }
     }
   }
 }
