@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en" class="bg-gray-100 text-gray-800">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Select WordPress Site</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-6 bg-gradient-to-br from-gray-200 via-white to-gray-100">
+
+  <div class="w-full max-w-2xl bg-white p-8 rounded-xl shadow-md">
+    <h2 class="text-2xl font-bold text-center text-blue-700 mb-6">Select a WordPress Site</h2>
+    
+    <div id="siteList" class="space-y-4"></div>
+
+    <div id="noSites" class="hidden text-center text-red-600 font-semibold mt-4">
+      🚫 No sites found. Please <a href="add-account.html" class="text-blue-700 underline">add one</a>.
+    </div>
+  </div>
+
+  <script>
+    const loggedUser = JSON.parse(localStorage.getItem("logged_user") || "null");
+    const siteList = document.getElementById("siteList");
+    const noSites = document.getElementById("noSites");
+
+    // Redirect to login if user not logged in
+    if (!loggedUser || !loggedUser.id) {
+      window.location.href = "login.html";
+    }
+
+    // Fetch user-specific sites from backend
+    async function loadSites() {
+      const res = await fetch(`https://n8n.sapidblue.in/webhook/get-user-sites?user_id=${loggedUser.id}`);
+      const sites = await res.json();
+
+      if (!Array.isArray(sites) || sites.length === 0) {
+        noSites.classList.remove("hidden");
+        return;
+      }
+
+      // Cache sites in localStorage (optional)
+      localStorage.setItem("wp_sites", JSON.stringify(sites));
+
+      sites.forEach(site => {
+        const div = document.createElement("div");
+        div.className = "p-4 border border-gray-300 rounded-lg flex justify-between items-center hover:bg-gray-50 transition";
+
+        const url = document.createElement("span");
+        url.textContent = site.site_url;
+        url.className = "font-semibold";
+
+        const btn = document.createElement("button");
+        btn.textContent = "Select";
+        btn.className = "bg-blue-700 text-white px-4 py-1 rounded-lg hover:bg-blue-800";
+        btn.onclick = () => {
+          localStorage.setItem("selected_wp", JSON.stringify(site));
+          window.location.href = "dashboard.html"; // move to your next step
+        };
+
+        div.appendChild(url);
+        div.appendChild(btn);
+        siteList.appendChild(div);
+      });
+    }
+
+    loadSites();
+  </script>
+
+</body>
+</html>
