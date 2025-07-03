@@ -39,41 +39,44 @@
   </div>
 
   <script>
-    const email = localStorage.getItem("user_email");
-    if (!email) {
-      window.location.href = "login.html";
-    }
+  const email = localStorage.getItem("user_email");
+  if (!email) {
+    window.location.href = "login.html";
+  }
 
-    const wpForm = document.getElementById("wpForm");
-    const msg = document.getElementById("msg");
+  const wpForm = document.getElementById("wpForm");
+  const msg = document.getElementById("msg");
 
-    wpForm.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const formData = Object.fromEntries(new FormData(wpForm).entries());
-      formData.email = email;
+  wpForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const formData = Object.fromEntries(new FormData(wpForm).entries());
+    formData.email = email;
 
-      const response = await fetch("https://n8n.sapidblue.in/webhook/form-add-wp-account", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData)
-      });
-
-      const result = await response.json();
-
-      if (result.success) {
-        msg.textContent = "✅ WordPress site added successfully!";
-        msg.classList.remove("hidden");
-        msg.classList.add("text-green-600");
-        setTimeout(() => {
-          window.location.href = "dashboard.html";
-        }, 1000);
-      } else {
-        msg.textContent = result.error || "❌ Failed to add site.";
-        msg.classList.remove("hidden");
-        msg.classList.add("text-red-600");
-      }
+    const response = await fetch("https://n8n.sapidblue.in/webhook/form-add-wp-account", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(formData)
     });
-  </script>
+
+    const result = await response.json();
+
+    msg.classList.remove("text-red-600", "text-green-600");
+    msg.classList.remove("hidden");
+
+    if (result.success) {
+      msg.textContent = "✅ WordPress site added successfully!";
+      msg.classList.add("text-green-600");
+
+      setTimeout(() => {
+        window.location.href = "dashboard.html";
+      }, 1000);
+    } else {
+      msg.textContent = result.error || "❌ Failed to add site.";
+      msg.classList.add("text-red-600");
+    }
+  });
+</script>
+
 
 </body>
 </html>
