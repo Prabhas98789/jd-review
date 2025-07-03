@@ -28,7 +28,7 @@
               Type: <span x-text="seq.type"></span> |
               Steps: <span x-text="seq.steps.length"></span> |
               Targets: <span x-text="seq.target_count"></span> |
-              Status: <span x-text="seq.status || 'loading'" class="font-medium"></span>
+              Status: <span x-text="seq.status || 'load...'" class="font-medium"></span>
             </p>
           </div>
           <div class="flex flex-wrap space-x-2">
@@ -56,8 +56,6 @@
   <template x-if="!loading && !sequences.length">
     <p class="text-gray-500">No sequences found.</p>
   </template>
-
-  <!-- (New Sequence Modal - unchanged) -->
 
   <script>
     function sequencePage() {
@@ -106,7 +104,9 @@
               body: JSON.stringify({ account_id: this.account_id })
             });
             const data = await res.json();
-            this.sequences = Array.isArray(data) ? data : [];
+            this.sequences = Array.isArray(data)
+              ? data.map(s => ({ ...s, status: s.status || 'load...' }))
+              : [];
           } catch (e) {
             console.error("Error fetching sequences:", e);
           } finally {
@@ -163,6 +163,7 @@
             });
 
             const created = await res.json();
+            created.status = created.status || 'load...';
             this.sequences.push(created);
             this.resetNewSequence();
           } catch (err) {
