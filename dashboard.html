@@ -38,37 +38,20 @@
         .then(data => {
           loading.classList.add("hidden");
 
-          // CASE 1: Using boolean response from `EXISTS` query
-          if (data.exists === 0 || data.exists === false) {
+          // Handle response like: [{ "exists": 0 }] or [{ "exists": 1 }]
+          const exists = Number(data?.[0]?.exists);
+
+          if (exists === 0) {
             msg.textContent = "No WordPress sites found. Redirecting...";
             msg.classList.remove("hidden");
             setTimeout(() => {
               window.location.href = "add-wp-site.html";
             }, 2000);
-          } 
-          
-          // CASE 2: Using array of site data (fallback)
-          else if (Array.isArray(data) && data.length > 0) {
-            sitesContainer.classList.remove("hidden");
-            data.forEach(site => {
-              const card = document.createElement("div");
-              card.className = "bg-white shadow p-6 rounded-xl border hover:shadow-lg transition";
-              card.innerHTML = `
-                <h3 class="text-xl font-bold text-blue-800 mb-2">${site.site_url}</h3>
-                <p><strong>Niche:</strong> ${site.niche}</p>
-                <p><strong>Username:</strong> ${site.username}</p>
-              `;
-              sitesContainer.appendChild(card);
-            });
-          } 
-
-          // CASE 3: Fallback if `exists` is true but no detailed data returned
-          else if (data.exists === 1 || data.exists === true) {
-            msg.textContent = "✅ WordPress site found, but no details returned.";
+          } else if (exists === 1) {
+            msg.textContent = "✅ WordPress site exists (no details shown).";
             msg.classList.remove("hidden");
-          } 
-          
-          else {
+            // Optionally fetch full site info if needed
+          } else {
             msg.textContent = "❌ Unexpected response format.";
             msg.classList.remove("hidden");
           }
