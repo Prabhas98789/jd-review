@@ -1,26 +1,69 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="bg-gray-100 text-gray-800">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Your Dashboard</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="min-h-screen bg-gray-100 p-8">
+<body class="min-h-screen p-6 bg-gradient-to-br from-gray-200 via-white to-gray-100">
+
+  <div class="max-w-5xl mx-auto">
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <h1 class="text-3xl font-bold text-blue-700">Welcome to Your Dashboard</h1>
+        <p class="mt-1 text-sm text-gray-600">Logged in as: <span id="emailDisplay" class="font-mono text-sm text-black"></span></p>
+      </div>
+      <button onclick="logout()" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">Logout</button>
+    </div>
+
+    <div id="loading" class="text-center text-gray-500 mb-4">🔄 Loading your WordPress sites...</div>
+    <div id="sitesContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-6 hidden"></div>
+    <div id="msg" class="text-center mt-4 font-semibold text-red-600 hidden"></div>
+  </div>
+
   <script>
     const email = localStorage.getItem("user_email");
+    const sitesContainer = document.getElementById("sitesContainer");
+    const msg = document.getElementById("msg");
+    const loading = document.getElementById("loading");
+
     if (!email) {
       window.location.href = "login.html";
+    } else {
+      document.getElementById("emailDisplay").textContent = email;
+
+      fetch(`https://n8n.sapidblue.in/webhook/check-wp-sites?email=${encodeURIComponent(email)}`)
+        .then(res => res.json())
+        .then(data => {
+          loading.classList.add("hidden");
+
+          if (!Array.isArray(data) || data.length === 0) {
+            msg.textContent = "No WordPress sites found. Redirecting...";
+            msg.classList.remove("hidden");
+            setTimeout(() => {
+              window.location.href = "add-wp-site.html";
+            }, 2000);
+          } else {
+            sitesContainer.classList.remove("hidden");
+            data.forEach(site => {
+              const card = document.createElement("div");
+              card.className = "bg-white shadow p-6 rounded-xl border hover:shadow-lg transition";
+              card.innerHTML = `
+                <h3 class="text-xl font-bold text-blue-800 mb-2">${site.site_url}</h3>
+                <p><strong>Niche:</strong> ${site.niche}</p>
+                <p><strong>Username:</strong> ${site.username}</p>
+              `;
+              sitesContainer.appendChild(card);
+            });
+          }
+        })
+        .catch(err => {
+          loading.classList.add("hidden");
+          msg.textContent = "❌ Failed to fetch sites.";
+          msg.classList.remove("hidden");
+        });
     }
-  </script>
-
-  <h1 class="text-3xl font-bold text-blue-700">Welcome to Your Dashboard</h1>
-  <p class="mt-2">Logged in as: <span id="emailDisplay" class="font-mono"></span></p>
-
-  <button onclick="logout()" class="mt-4 bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">Logout</button>
-
-  <script>
-    document.getElementById("emailDisplay").textContent = localStorage.getItem("user_email");
 
     function logout() {
       localStorage.removeItem("user_email");
