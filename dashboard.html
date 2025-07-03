@@ -17,7 +17,7 @@
       <button onclick="logout()" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">Logout</button>
     </div>
 
-    <div id="loading" class="text-center text-gray-500 mb-4">🔄 Loading your WordPress sites...</div>
+    <div id="loading" class="text-center text-gray-500 mb-4">🔄 Checking your WordPress site status...</div>
     <div id="sitesContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-6 hidden"></div>
     <div id="msg" class="text-center mt-4 font-semibold text-red-600 hidden"></div>
   </div>
@@ -38,13 +38,17 @@
         .then(data => {
           loading.classList.add("hidden");
 
-          if (!Array.isArray(data) || data.length === 0) {
+          // CASE 1: Using boolean response from `EXISTS` query
+          if (data.exists === 0 || data.exists === false) {
             msg.textContent = "No WordPress sites found. Redirecting...";
             msg.classList.remove("hidden");
             setTimeout(() => {
               window.location.href = "add-wp-site.html";
             }, 2000);
-          } else {
+          } 
+          
+          // CASE 2: Using array of site data (fallback)
+          else if (Array.isArray(data) && data.length > 0) {
             sitesContainer.classList.remove("hidden");
             data.forEach(site => {
               const card = document.createElement("div");
@@ -56,11 +60,22 @@
               `;
               sitesContainer.appendChild(card);
             });
+          } 
+
+          // CASE 3: Fallback if `exists` is true but no detailed data returned
+          else if (data.exists === 1 || data.exists === true) {
+            msg.textContent = "✅ WordPress site found, but no details returned.";
+            msg.classList.remove("hidden");
+          } 
+          
+          else {
+            msg.textContent = "❌ Unexpected response format.";
+            msg.classList.remove("hidden");
           }
         })
         .catch(err => {
           loading.classList.add("hidden");
-          msg.textContent = "❌ Failed to fetch sites.";
+          msg.textContent = "❌ Failed to fetch site status.";
           msg.classList.remove("hidden");
         });
     }
