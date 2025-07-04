@@ -63,7 +63,7 @@
                 <p><strong>Niche:</strong> ${site.niche}</p>
                 <p><strong>Username:</strong> ${site.username}</p>
                 <div class="mt-4 flex items-center gap-2">
-                  <button onclick="viewAnalytics('${site.id}', '${site.site_url}', this)" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">🔍 View</button>
+                  <button onclick="viewAnalytics('${site.user_id}', '${site.site_url}', this)" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">🔍 View</button>
                   <span class="loader hidden text-sm text-gray-600">⏳ Loading...</span>
                 </div>
               `;
@@ -86,12 +86,12 @@
       window.location.href = "login.html";
     }
 
-    function viewAnalytics(id, siteUrl, buttonElement) {
+    function viewAnalytics(user_id, siteUrl, buttonElement) {
       const loader = buttonElement.nextElementSibling;
       buttonElement.disabled = true;
       loader.classList.remove("hidden");
 
-      const url = `https://n8n.sapidblue.in/webhook/site-analytics?id=${encodeURIComponent(id)}&site_url=${encodeURIComponent(siteUrl)}`;
+      const url = `https://n8n.sapidblue.in/webhook/site-analytics?user_id=${encodeURIComponent(user_id)}&site_url=${encodeURIComponent(siteUrl)}`;
 
       fetch(url, {
         method: "GET"
@@ -99,7 +99,7 @@
         .then(res => res.json())
         .then(data => {
           if (data.success) {
-            window.location.href = `analytics.html?id=${encodeURIComponent(id)}&site_url=${encodeURIComponent(siteUrl)}`;
+            window.location.href = `analytics.html?user_id=${encodeURIComponent(user_id)}&site_url=${encodeURIComponent(siteUrl)}`;
           } else {
             alert("Analysis started, please wait or try again later.");
             loader.classList.add("hidden");
